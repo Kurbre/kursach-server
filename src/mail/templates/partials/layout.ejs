@@ -1,0 +1,181 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html
+	lang="ru"
+	xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:v="urn:schemas-microsoft-com:vml"
+	xmlns:o="urn:schemas-microsoft-com:office:office"
+>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title><%= title %></title>
+		<!-- <meta name="color-scheme" content="light dark" />
+    	<meta name="supported-color-schemes" content="light dark" /> -->
+		<style>
+			/* Базовые сбросы для почтовиков */
+			body {
+				margin: 0;
+				padding: 0;
+				width: 100% !important;
+				-webkit-text-size-adjust: 100%;
+				-ms-text-size-adjust: 100%;
+				background-color: #f4f7f9;
+			}
+			img {
+				border: 0;
+				height: auto;
+				line-height: 100%;
+				outline: none;
+				text-decoration: none;
+			}
+			table {
+				border-collapse: collapse !important;
+			}
+
+			/* Мобильная адаптация */
+			@media screen and (max-width: 600px) {
+				.container {
+					width: 100% !important;
+				}
+				.content {
+					padding: 20px !important;
+				}
+			}
+
+			.body {
+				background-color: #f4f7f9;
+				padding-top: 20px;
+				padding-right: 0;
+				padding-bottom: 20px;
+				padding-left: 0;
+			}
+
+			.container {
+				background-color: #ffffff;
+				border-radius: 12px;
+				overflow: hidden;
+				box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+			}
+
+			.content {
+				padding-top: 40px;
+				padding-right: 40px;
+				padding-bottom: 40px;
+				padding-left: 40px;
+				font-family: 'Segoe UI', Arial, sans-serif;
+				color: #333333;
+				line-height: 1.6;
+			}
+
+			/* :root {
+				color-scheme: light dark;
+				supported-color-schemes: light dark;
+			} */
+
+			/* @media (prefers-color-scheme: dark) {
+				table,
+				td {
+				background-color: #06080B !important;
+				}
+
+				h1,
+				h2,
+				p {
+				color: #ffffff !important;
+				}
+			} */
+		</style>
+		<!--[if (gte mso 9) | (IE)]>
+			<style type="text/css">
+				table {
+					border-collapse: collapse !important;
+				}
+			</style>
+		<![endif]-->
+
+		<!--[if (gte mso 9) | (IE)]>
+			<xml>
+				<o:OfficeDocumentSettings>
+					<o:AllowPNG />
+					<o:PixelsPerInch>96</o:PixelsPerInch>
+				</o:OfficeDocumentSettings>
+			</xml>
+		<![endif]-->
+	</head>
+	<body>
+		<!--[if (gte mso 9) | (IE)]>
+			<style type="text/css">
+				body {
+					background-color: #dde0e1 !important;
+				}
+				body,
+				table,
+				td,
+				p,
+				a {
+					font-family: sans-serif, Arial, Helvetica !important;
+				}
+			</style>
+		<![endif]-->
+		<center>
+			<table
+				width="100%"
+				cellpadding="0"
+				cellspacing="0"
+				border="0"
+				class="body"
+				bgcolor="#f4f7f9"
+			>
+				<tr>
+					<td align="center">
+						<table
+							width="600"
+							cellpadding="0"
+							cellspacing="0"
+							border="0"
+							class="container"
+							bgcolor="#ffffff"
+							align="center"
+						>
+							<div
+								style="
+									font-size: 0;
+									line-height: 1px;
+									mso-line-height-rule: exactly;
+									display: none;
+									max-width: 0;
+									opacity: 0;
+									overflow: hidden;
+									mso-hide: all;
+								"
+							>
+								<%= title %>
+							</div>
+							<!--[if (gte mso 9) | (IE)]>
+								<table width="600" align="center" border="0" cellpadding="0" cellspacing="0" role="presentation">
+								<tr>
+								<td>
+							<![endif]-->
+							<!-- Header -->
+							<%- include('partials/header') %>
+
+							<!-- Body -->
+							<tr>
+								<td class="content"><%- content %></td>
+							</tr>
+
+							<!-- Footer -->
+							<%- include('partials/footer') %>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<!--[if (gte mso 9) | (IE)]>
+				</td>
+				</tr>
+				</table>
+			<![endif]-->
+		</center>
+	</body>
+</html>
