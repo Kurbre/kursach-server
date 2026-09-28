@@ -2,8 +2,10 @@ import {
 	BadRequestException,
 	Body,
 	Controller,
+	Get,
 	Post,
 	Query,
+	Req,
 	Res
 } from '@nestjs/common'
 import { AuthService } from './auth.service'
@@ -11,6 +13,9 @@ import { CreateUserDto } from '../users/dto/create-user.dto'
 import { ConfigService } from '@nestjs/config'
 import { type Response } from 'express'
 import { LoginDto } from './dto/login.dto'
+import { GoogleAuth } from './decorators/google-auth.decorator'
+import { GetAuthUser } from '../users/decorators/users.decorator'
+import { type User } from '../users/types/user.type'
 
 @Controller('auth')
 export class AuthController {
@@ -19,7 +24,7 @@ export class AuthController {
 		private readonly configService: ConfigService
 	) {}
 
-	private setRefreshTokenCookie(token: string, res: Response) {
+	private setAccessTokenCookie(token: string, res: Response) {
 		res.cookie('accessToken', token, {
 			httpOnly: true,
 			sameSite: 'lax',
@@ -42,7 +47,7 @@ export class AuthController {
 
 		const { accessToken, user } = await this.authService.confirmRegister(token)
 
-		this.setRefreshTokenCookie(accessToken, res)
+		this.setAccessTokenCookie(accessToken, res)
 
 		return user
 	}
@@ -54,7 +59,7 @@ export class AuthController {
 	) {
 		const { accessToken, user } = await this.authService.login(dto)
 
-		this.setRefreshTokenCookie(accessToken, res)
+		this.setAccessTokenCookie(accessToken, res)
 
 		return user
 	}
@@ -67,5 +72,22 @@ export class AuthController {
 			success: true,
 			message: 'You have successfully logged out of your account.'
 		}
+	}
+
+	@Get('google')
+	@GoogleAuth()
+	google() {}
+
+	@Get('google/callback')
+	@GoogleAuth()
+	async googleCallback(
+		@GetAuthUser() user: User,
+		@Res({ passthrough: true }) res: Response
+	) {
+		const accessToken = await this.authService.generateAccessToken(user.id)
+
+		this.setAccessTokenCookie(accessToken, res)
+
+		return user
 	}
 }
