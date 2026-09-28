@@ -12,12 +12,6 @@ import { User } from './types/user.type'
 export class UsersService {
 	constructor(private readonly db: DatabaseService) {}
 
-	async findAll() {
-		const { rows } = await this.db.query<User[]>('SELECT * FROM users')
-
-		return rows
-	}
-
 	async findById(id: string) {
 		const { rows } = await this.db.query<User>(
 			`
