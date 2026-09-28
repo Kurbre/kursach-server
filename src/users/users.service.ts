@@ -48,6 +48,22 @@ export class UsersService {
 		return rows[0]
 	}
 
+	async findPasswordByEmailOrUsername(login: string, isValidation = true) {
+		const { rows } = await this.db.query<User & { password: string }>(
+			`
+				SELECT * from users
+				WHERE email = $1 OR login = $1
+			`,
+			[login]
+		)
+
+		if (isValidation) {
+			if (!rows[0]) throw new NotFoundException('User not found.')
+		}
+
+		return rows[0]
+	}
+
 	async create(dto: CreateUserDto) {
 		const { rows } = await this.db.query<User>(
 			`

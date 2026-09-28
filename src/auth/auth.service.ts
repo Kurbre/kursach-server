@@ -1,4 +1,9 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common'
+import {
+	BadRequestException,
+	Inject,
+	Injectable,
+	UnauthorizedException
+} from '@nestjs/common'
 import { UsersService } from '../users/users.service'
 import { CreateUserDto } from '../users/dto/create-user.dto'
 import { DatabaseService } from '../database/database.service'
@@ -7,17 +12,20 @@ import { REDIS_CLIENT } from '../redis/redis.module'
 import { InjectQueue } from '@nestjs/bullmq'
 import { authQueueConstant } from './constants/auth-queue.constant'
 import { Queue } from 'bullmq'
-import { hash } from 'argon2'
+import { hash, verify } from 'argon2'
 import { randomBytes } from 'crypto'
 import { type User } from '../users/types/user.type'
+import { JwtService } from '@nestjs/jwt'
+import { LoginDto } from './dto/login.dto'
 
 @Injectable()
 export class AuthService {
 	constructor(
+		@Inject(REDIS_CLIENT) private readonly redis: Redis,
+		@InjectQueue(authQueueConstant.name) private readonly authQueue: Queue,
 		private readonly usersService: UsersService,
 		private readonly db: DatabaseService,
-		@Inject(REDIS_CLIENT) private readonly redis: Redis,
-		@InjectQueue(authQueueConstant.name) private readonly authQueue: Queue
+		private readonly jwtService: JwtService
 	) {}
 
 	async register(dto: CreateUserDto) {
@@ -83,15 +91,45 @@ export class AuthService {
 			throw new BadRequestException('Email or login is already taken.')
 		}
 
-		await this.redis.del(this.getPendingUser(token))
-
-		return this.usersService.create({
+		const user = await this.usersService.create({
 			email,
 			login,
 			name,
 			password,
 			surname
 		})
+
+		const accessToken = await this.generateAccessToken(user.id)
+
+		await this.redis.del(this.getPendingUser(token))
+
+		return {
+			user,
+			accessToken
+		}
+	}
+
+	async login(dto: LoginDto) {
+		const user = await this.usersService.findPasswordByEmailOrUsername(
+			dto.login,
+			false
+		)
+		if (!user) throw new UnauthorizedException('Incorrect login or password.')
+
+		const isValidPassword = await verify(user.password, dto.password)
+		if (!isValidPassword)
+			throw new UnauthorizedException('Incorrect login or password.')
+
+		const accessToken = await this.generateAccessToken(user.id)
+
+		return {
+			user,
+			accessToken
+		}
+	}
+
+	private async generateAccessToken(id: string) {
+		return this.jwtService.signAsync({ sub: id })
 	}
 
 	private getPendingUser(token: string) {
