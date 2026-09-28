@@ -21,7 +21,7 @@ export class UsersService {
 	async findById(id: string) {
 		const { rows } = await this.db.query<User>(
 			`
-				SELECT id, email, username, created_at, updated_at FROM users 
+				SELECT id, email, login, name, surname, created_at, updated_at FROM users 
 				WHERE id = $1
 			`,
 			[id]
@@ -35,8 +35,8 @@ export class UsersService {
 	async findByEmailOrUsername(login: string, isValidation = true) {
 		const { rows } = await this.db.query<User>(
 			`
-				SELECT id, email, username, created_at, updated_at from users 
-				WHERE email = $1 OR username = $1
+				SELECT id, email, login, name, surname, created_at, updated_at from users 
+				WHERE email = $1 OR login = $1
 			`,
 			[login]
 		)
@@ -51,11 +51,11 @@ export class UsersService {
 	async create(dto: CreateUserDto) {
 		const { rows } = await this.db.query<User>(
 			`
-				INSERT INTO users (email, username, password) 
-				VALUES ($1, $2, $3)
-				RETURNING id, email, username, created_at, updated_at
+				INSERT INTO users (email, login, password, name, surname) 
+				VALUES ($1, $2, $3, $4, $5)
+				RETURNING id, email, login, name, surname, created_at, updated_at
 			`,
-			[dto.email, dto.username, dto.password]
+			[dto.email, dto.login, dto.password, dto.name, dto.surname]
 		)
 
 		return rows[0]

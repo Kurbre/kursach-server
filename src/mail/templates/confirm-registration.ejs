@@ -1,0 +1,49 @@
+<p style="margin: 0 0 20px 0; font-size: 18px; font-weight: bold">
+	Здравствуйте, <%= name %> <%= surname %>!
+</p>
+<p style="margin: 0 0 20px 0">
+	Мы рады, что вы присоединились к нам. Чтобы начать пользоваться всеми
+	функциями нашего сервиса, пожалуйста, подтвердите ваш адрес электронной почты.
+</p>
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
+	<tr>
+		<td align="center">
+			<a
+				href="<%= link %>"
+				target="_blank"
+				style="
+					background-color: #46b5e0;
+					color: #ffffff;
+					padding: 10px 25px;
+					text-decoration: none;
+					border-radius: 12px;
+					font-weight: bold;
+					display: inline-block;
+					font-size: 16px;
+					box-shadow: 0 4px 6px rgba(70, 181, 224, 0.3);
+					cursor: pointer;
+				"
+			>
+				Подтвердить E-mail
+			</a>
+		</td>
+	</tr>
+</table>
+
+<p
+	style="
+		margin: 20px 0 0 0;
+		font-size: 14px;
+		color: #777777;
+		text-align: center;
+	"
+>
+	Если кнопка выше не работает, скопируйте и вставьте ссылку в браузер:<br />
+	<a
+		href="<%= link %>"
+		target="_blank"
+		style="color: #46b5e0; text-decoration: underline"
+		><%= link %></a
+	>
+</p>

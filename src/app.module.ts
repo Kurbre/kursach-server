@@ -7,6 +7,8 @@ import { JwtModule } from '@nestjs/jwt'
 import { jwtConfig } from './config/jwt.config'
 import { MailModule } from './mail/mail.module'
 import { RedisModule } from './redis/redis.module'
+import { BullModule } from '@nestjs/bullmq'
+import { bullMQConfig } from './config/bull-mq.config'
 
 @Module({
 	imports: [
@@ -18,6 +20,11 @@ import { RedisModule } from './redis/redis.module'
 			imports: [ConfigModule],
 			inject: [ConfigService],
 			useFactory: jwtConfig
+		}),
+		BullModule.forRootAsync({
+			imports: [ConfigModule],
+			inject: [ConfigService],
+			useFactory: bullMQConfig
 		}),
 		DatabaseModule,
 		UsersModule,

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { type Data, renderFile } from 'ejs'
 import * as nodemailer from 'nodemailer'
@@ -7,18 +7,28 @@ import juice from 'juice'
 
 @Injectable()
 export class MailService {
+	private readonly logger = new Logger(MailService.name)
 	private transporter
 
 	constructor(private readonly configService: ConfigService) {
 		this.transporter = nodemailer.createTransport({
 			host: this.configService.getOrThrow<string>('SMTP_HOST'),
-			port: Number(this.configService.getOrThrow<number>('SMTP_PORT')),
-			secure: Boolean(this.configService.getOrThrow<boolean>('SMTP_SECURE')), // true для 465, false для других портов
+			port: Number(this.configService.getOrThrow<string>('SMTP_PORT')),
+			secure: this.configService.getOrThrow<string>('SMTP_SECURE') === 'true', // true для 465, false для других портов
 			auth: {
 				user: this.configService.getOrThrow<string>('SMTP_USER'),
 				pass: this.configService.getOrThrow<string>('SMTP_PASSWORD')
 			}
 		})
+
+		this.transporter
+			.verify()
+			.then(() => {
+				this.logger.log('SMTP connection is ready')
+			})
+			.catch(error => {
+				this.logger.error('SMTP connection failed:', error)
+			})
 	}
 
 	async sendMail(to: string, subject: string, html: string) {
