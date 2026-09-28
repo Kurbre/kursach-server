@@ -7,10 +7,11 @@ import { BullModule } from '@nestjs/bullmq'
 import { AuthProcessor } from './auth.processor'
 import { authQueueConstant } from './constants/auth-queue.constant'
 import { MailModule } from '../mail/mail.module'
+import { GoogleStrategy } from './strategies/google.strategy'
 
 @Module({
 	controllers: [AuthController],
-	providers: [AuthService, JwtStrategy, AuthProcessor],
+	providers: [AuthService, JwtStrategy, AuthProcessor, GoogleStrategy],
 	imports: [
 		BullModule.registerQueue({ name: authQueueConstant.name }),
 		UsersModule,
