@@ -58,4 +58,14 @@ export class AuthController {
 
 		return user
 	}
+
+	@Post('logout')
+	logout(@Res({ passthrough: true }) res: Response) {
+		res.clearCookie('accessToken')
+
+		return {
+			success: true,
+			message: 'You have successfully logged out of your account.'
+		}
+	}
 }
