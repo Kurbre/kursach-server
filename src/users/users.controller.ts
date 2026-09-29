@@ -1,7 +1,7 @@
-import { Controller, Get, Param, ParseUUIDPipe } from '@nestjs/common'
-import { UsersService } from './users.service'
-import { GetAuthUser } from './decorators/users.decorator'
+import { Controller, Get } from '@nestjs/common'
 import { Auth } from '../auth/decorators/auth.decorator'
+import { GetAuthUser } from './decorators/users.decorator'
+import { UsersService } from './users.service'
 
 @Controller('users')
 export class UsersController {

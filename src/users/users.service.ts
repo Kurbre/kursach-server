@@ -1,11 +1,6 @@
-import {
-	BadRequestException,
-	Injectable,
-	NotFoundException
-} from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { DatabaseService } from '../database/database.service'
 import { CreateUserDto } from './dto/create-user.dto'
-import { hash } from 'argon2'
 import { User } from './types/user.type'
 
 @Injectable()

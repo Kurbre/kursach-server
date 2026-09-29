@@ -1,6 +1,6 @@
 import { ExecutionContext } from '@nestjs/common'
 import { mockUser } from '../mocks/users.mock'
-import { getAuthUser, GetAuthUser } from './users.decorator'
+import { getAuthUser } from './users.decorator'
 
 describe('UsersDecorator', () => {
 	const mockContext = {

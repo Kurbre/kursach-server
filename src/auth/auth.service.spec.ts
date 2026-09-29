@@ -1,6 +1,9 @@
 import { getQueueToken } from '@nestjs/bullmq'
+import { BadRequestException, UnauthorizedException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { Test } from '@nestjs/testing'
+import * as argon2 from 'argon2'
+import { Profile } from 'passport-google-oauth20'
 import { DatabaseService } from '../database/database.service'
 import { REDIS_CLIENT } from '../redis/redis.module'
 import { CreateUserDto } from '../users/dto/create-user.dto'
@@ -8,14 +11,7 @@ import { mockUser } from '../users/mocks/users.mock'
 import { UsersService } from '../users/users.service'
 import { AuthService } from './auth.service'
 import { authQueueConstant } from './constants/auth-queue.constant'
-import {
-	BadRequestException,
-	NotFoundException,
-	UnauthorizedException
-} from '@nestjs/common'
-import * as argon2 from 'argon2'
 import { LoginDto } from './dto/login.dto'
-import { Profile } from 'passport-google-oauth20'
 
 jest.mock('argon2')
 
@@ -155,6 +151,10 @@ describe('AuthService', () => {
 		mockRedis.get.mockResolvedValue(JSON.stringify(user))
 		jest.spyOn(service, 'generateAccessToken').mockResolvedValue('access-token')
 
+		const generateAccessTokenSpy = jest
+			.spyOn(service, 'generateAccessToken')
+			.mockResolvedValue('access-token')
+
 		const result = await service.confirmRegister('token')
 
 		expect(mockRedis.get).toHaveBeenCalledWith(
@@ -164,7 +164,7 @@ describe('AuthService', () => {
 		expect(mockUsersService.create).toHaveBeenCalledWith(user)
 		expect(result.user).toEqual(mockUser)
 
-		expect(service.generateAccessToken).toHaveBeenCalledWith(mockUser.id)
+		expect(generateAccessTokenSpy).toHaveBeenCalledWith(mockUser.id)
 
 		expect(mockRedis.del).toHaveBeenCalledWith(
 			expect.stringContaining('pendingUser')
@@ -201,6 +201,10 @@ describe('AuthService', () => {
 		;(argon2.verify as jest.Mock).mockResolvedValue(true)
 		jest.spyOn(service, 'generateAccessToken').mockResolvedValue('token')
 
+		const generateAccessTokenSpy = jest
+			.spyOn(service, 'generateAccessToken')
+			.mockResolvedValue('access-token')
+
 		const result = await service.login(dto)
 
 		expect(mockUsersService.findPasswordByEmailOrUsername).toHaveBeenCalledWith(
@@ -210,7 +214,7 @@ describe('AuthService', () => {
 
 		expect(argon2.verify).toHaveBeenCalledWith('hashed-password', dto.password)
 
-		expect(service.generateAccessToken).toHaveBeenCalledWith(mockUser.id)
+		expect(generateAccessTokenSpy).toHaveBeenCalledWith(mockUser.id)
 
 		expect(result).toEqual({
 			user: {

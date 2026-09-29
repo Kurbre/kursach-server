@@ -1,24 +1,12 @@
-import { getQueueToken } from '@nestjs/bullmq'
-import { JwtService } from '@nestjs/jwt'
+import { BadRequestException } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
+import { AuthGuard } from '@nestjs/passport'
 import { Test } from '@nestjs/testing'
-import { DatabaseService } from '../database/database.service'
-import { REDIS_CLIENT } from '../redis/redis.module'
 import { CreateUserDto } from '../users/dto/create-user.dto'
 import { mockUser } from '../users/mocks/users.mock'
-import { UsersService } from '../users/users.service'
-import { AuthService } from './auth.service'
-import { authQueueConstant } from './constants/auth-queue.constant'
-import {
-	BadRequestException,
-	NotFoundException,
-	UnauthorizedException
-} from '@nestjs/common'
-import * as argon2 from 'argon2'
-import { LoginDto } from './dto/login.dto'
-import { Profile } from 'passport-google-oauth20'
 import { AuthController } from './auth.controller'
-import { AuthGuard } from '@nestjs/passport'
-import { ConfigService } from '@nestjs/config'
+import { AuthService } from './auth.service'
+import { LoginDto } from './dto/login.dto'
 
 jest.mock('argon2')
 

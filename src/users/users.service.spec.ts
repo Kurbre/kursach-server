@@ -1,9 +1,9 @@
-import { Test, TestingModule } from '@nestjs/testing'
-import { UsersService } from './users.service'
-import { DatabaseService } from '../database/database.service'
 import { NotFoundException } from '@nestjs/common'
+import { Test } from '@nestjs/testing'
+import { DatabaseService } from '../database/database.service'
 import { CreateUserDto } from './dto/create-user.dto'
 import { mockUser } from './mocks/users.mock'
+import { UsersService } from './users.service'
 
 describe('UsersService', () => {
 	let service: UsersService
