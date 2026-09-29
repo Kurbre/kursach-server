@@ -33,10 +33,6 @@ describe('UsersController', () => {
 	it('should return current user', async () => {
 		mockUsersService.findById.mockResolvedValue(mockUser)
 
-		const req = {
-			user: mockUser
-		}
-
 		const result = await controller.getProfile(mockUser.id)
 
 		expect(result).toEqual(mockUser)
