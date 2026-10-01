@@ -3,19 +3,20 @@ import {
 	Body,
 	Controller,
 	Get,
+	HttpCode,
+	HttpStatus,
 	Post,
 	Query,
-	Req,
 	Res
 } from '@nestjs/common'
-import { AuthService } from './auth.service'
-import { CreateUserDto } from '../users/dto/create-user.dto'
 import { ConfigService } from '@nestjs/config'
 import { type Response } from 'express'
-import { LoginDto } from './dto/login.dto'
-import { GoogleAuth } from './decorators/google-auth.decorator'
 import { GetAuthUser } from '../users/decorators/users.decorator'
+import { CreateUserDto } from '../users/dto/create-user.dto'
 import { type User } from '../users/types/user.type'
+import { AuthService } from './auth.service'
+import { GoogleAuth } from './decorators/google-auth.decorator'
+import { LoginDto } from './dto/login.dto'
 
 @Controller('auth')
 export class AuthController {
@@ -65,6 +66,7 @@ export class AuthController {
 	}
 
 	@Post('logout')
+	@HttpCode(HttpStatus.OK)
 	logout(@Res({ passthrough: true }) res: Response) {
 		res.clearCookie('accessToken')
 

@@ -1,22 +1,11 @@
-import {
-	BadRequestException,
-	Injectable,
-	NotFoundException
-} from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { DatabaseService } from '../database/database.service'
 import { CreateUserDto } from './dto/create-user.dto'
-import { hash } from 'argon2'
 import { User } from './types/user.type'
 
 @Injectable()
 export class UsersService {
 	constructor(private readonly db: DatabaseService) {}
-
-	async findAll() {
-		const { rows } = await this.db.query<User[]>('SELECT * FROM users')
-
-		return rows
-	}
 
 	async findById(id: string) {
 		const { rows } = await this.db.query<User>(
