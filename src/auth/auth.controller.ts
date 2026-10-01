@@ -3,6 +3,8 @@ import {
 	Body,
 	Controller,
 	Get,
+	HttpCode,
+	HttpStatus,
 	Post,
 	Query,
 	Res
@@ -64,6 +66,7 @@ export class AuthController {
 	}
 
 	@Post('logout')
+	@HttpCode(HttpStatus.OK)
 	logout(@Res({ passthrough: true }) res: Response) {
 		res.clearCookie('accessToken')
 
