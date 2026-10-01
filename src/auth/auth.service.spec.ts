@@ -203,7 +203,7 @@ describe('AuthService', () => {
 
 		const generateAccessTokenSpy = jest
 			.spyOn(service, 'generateAccessToken')
-			.mockResolvedValue('access-token')
+			.mockResolvedValue('token')
 
 		const result = await service.login(dto)
 
