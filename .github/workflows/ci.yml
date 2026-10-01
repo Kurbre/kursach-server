@@ -13,6 +13,55 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLIENT_URL: ${{ secrets.CLIENT_URL || 'http://localhost:3000' }}
+      POSTGRES_HOST: localhost
+      POSTGRES_USER: ${{ secrets.POSTGRES_USER || 'admin' }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD || 'ci-password' }}
+      POSTGRES_DB: ${{ secrets.POSTGRES_DB || 'kursach' }}
+      POSTGRES_PORT: 5432
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci-test-secret' }}
+      SMTP_USER: ${{ secrets.SMTP_USER || 'ci@example.com' }}
+      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD || 'ci-password' }}
+      SMTP_PORT: 1025
+      SMTP_HOST: localhost
+      SMTP_SECURE: 'false'
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID || 'ci-client-id' }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET || 'ci-client-secret' }}
+      GOOGLE_CALLBACK_URL: ${{ secrets.GOOGLE_CALLBACK_URL || 'http://localhost:4200/auth/google/callback' }}
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER || 'admin' }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD || 'ci-password' }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB || 'kursach' }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      mailpit:
+        image: axllent/mailpit:v1.27.8
+        env:
+          MP_SMTP_AUTH_ACCEPT_ANY: '1'
+          MP_SMTP_AUTH_ALLOW_INSECURE: '1'
+        ports:
+          - 1025:1025
 
     steps:
       - name: Checkout repository
@@ -24,6 +73,9 @@ jobs:
           node-version: 24
           cache: yarn
 
+      - name: Enable Yarn Classic
+        run: corepack prepare yarn@1.22.22 --activate
+
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
@@ -31,10 +83,24 @@ jobs:
         run: yarn lint
 
       - name: Run tests
-        run: yarn test
+        run: yarn test --runInBand --ci
+
+      - name: Wait for SMTP
+        run: |
+          for attempt in {1..30}; do
+            if nc -z localhost 1025; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Mailpit SMTP did not become ready" >&2
+          exit 1
+
+      - name: Run database migrations
+        run: yarn migration:run
 
       - name: Run E2E tests
-        run: yarn test:e2e
+        run: yarn test:e2e --runInBand --ci
 
       - name: Build
         run: yarn build
