@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { DatabaseService } from '../database/database.service'
+import { Roles } from '../roles/types/role.type'
 import { CreateUserDto } from './dto/create-user.dto'
 import { User } from './types/user.type'
 
@@ -10,8 +11,19 @@ export class UsersService {
 	async findById(id: string) {
 		const { rows } = await this.db.query<User>(
 			`
-				SELECT id, email, login, name, surname, created_at, updated_at FROM users 
-				WHERE id = $1
+				SELECT
+					u.id,
+					u.email,
+					u.login,
+					u.name,
+					u.surname,
+					u.role_id,
+					r.name AS role,
+					u.created_at,
+					u.updated_at
+				FROM users u
+				LEFT JOIN roles r ON u.role_id = r.id
+				WHERE u.id = $1
 			`,
 			[id]
 		)
@@ -56,11 +68,18 @@ export class UsersService {
 	async create(dto: CreateUserDto) {
 		const { rows } = await this.db.query<User>(
 			`
-				INSERT INTO users (email, login, password, name, surname) 
-				VALUES ($1, $2, $3, $4, $5)
-				RETURNING id, email, login, name, surname, created_at, updated_at
+				INSERT INTO users (email, login, password, name, surname, role_id)
+				VALUES (
+					$1,
+					$2,
+					$3,
+					$4,
+					$5,
+					(SELECT id FROM roles WHERE name = $6)
+				)
+				RETURNING id, email, login, name, surname, role_id, created_at, updated_at
 			`,
-			[dto.email, dto.login, dto.password, dto.name, dto.surname]
+			[dto.email, dto.login, dto.password, dto.name, dto.surname, Roles.GUEST]
 		)
 
 		return rows[0]

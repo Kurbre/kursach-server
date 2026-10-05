@@ -1,3 +1,5 @@
+import { Roles } from '../../roles/types/role.type'
+
 export type User = {
 	id: string
 	login: string
@@ -6,4 +8,6 @@ export type User = {
 	email: string
 	created_at: Date
 	updated_at: Date
+	role: Roles | null
+	role_id: string | null
 }

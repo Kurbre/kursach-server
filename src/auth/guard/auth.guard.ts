@@ -25,9 +25,20 @@ export class AuthGuard implements CanActivate {
 
 			const { rows } = await this.db.query(
 				`
-                SELECT id, email, login, name, surname, created_at, updated_at FROM users 
-                WHERE id = $1
-            `,
+					SELECT
+						u.id,
+						u.email,
+						u.login,
+						u.name,
+						u.surname,
+						u.role_id,
+						r.name AS role,
+						u.created_at,
+						u.updated_at
+					FROM users u
+					LEFT JOIN roles r ON u.role_id = r.id
+					WHERE u.id = $1
+				`,
 				[decoded.sub]
 			)
 

@@ -5,6 +5,7 @@ import { Test } from '@nestjs/testing'
 import * as argon2 from 'argon2'
 import { Profile } from 'passport-google-oauth20'
 import { DatabaseService } from '../database/database.service'
+import { Roles } from '../roles/types/role.type'
 import { REDIS_CLIENT } from '../redis/redis.module'
 import { CreateUserDto } from '../users/dto/create-user.dto'
 import { mockUser } from '../users/mocks/users.mock'
@@ -429,7 +430,7 @@ describe('AuthService', () => {
 		expect(mockDatabaseService.query).toHaveBeenNthCalledWith(
 			4,
 			expect.stringContaining('INSERT INTO users'),
-			['john.doe@gmail.com', 'johndoe', 'John', 'Doe', null]
+			['john.doe@gmail.com', 'johndoe', 'John', 'Doe', null, Roles.GUEST]
 		)
 
 		expect(mockDatabaseService.query).toHaveBeenNthCalledWith(
@@ -530,7 +531,7 @@ describe('AuthService', () => {
 		expect(mockDatabaseService.query).toHaveBeenNthCalledWith(
 			6,
 			expect.stringContaining('INSERT INTO users'),
-			['john.doe@gmail.com', 'johndoe2', 'John', 'Doe', null]
+			['john.doe@gmail.com', 'johndoe2', 'John', 'Doe', null, Roles.GUEST]
 		)
 
 		expect(mockDatabaseService.query).toHaveBeenNthCalledWith(

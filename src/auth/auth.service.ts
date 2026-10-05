@@ -18,6 +18,7 @@ import { type User } from '../users/types/user.type'
 import { JwtService } from '@nestjs/jwt'
 import { LoginDto } from './dto/login.dto'
 import { Profile } from 'passport-google-oauth20'
+import { Roles } from '../roles/types/role.type'
 
 @Injectable()
 export class AuthService {
@@ -229,19 +230,28 @@ export class AuthService {
 				login,
 				name,
 				surname,
-				password
+				password,
+				role_id
 			)
-			VALUES ($1, $2, $3, $4, $5)
+			VALUES (
+				$1,
+				$2,
+				$3,
+				$4,
+				$5,
+				(SELECT id FROM roles WHERE name = $6)
+			)
 			RETURNING
 				id,
 				email,
 				login,
 				name,
 				surname,
+				role_id,
 				created_at,
 				updated_at
 		`,
-			[data.email, login, data.name, data.surname, null]
+			[data.email, login, data.name, data.surname, null, Roles.GUEST]
 		)
 
 		const user = userRows[0]
@@ -268,4 +278,6 @@ export class AuthService {
 	private getPendingUser(token: string) {
 		return `pendingUser:${token}`
 	}
+
+	// TODO Create reset-password
 }
