@@ -5,11 +5,11 @@ import {
 	Body,
 	Patch,
 	Param,
-	Delete
+	Delete,
+	ParseUUIDPipe
 } from '@nestjs/common'
 import { RolesService } from './roles.service'
 import { CreateRoleDto } from './dto/create-role.dto'
-import { UpdateRoleDto } from './dto/update-role.dto'
 import { Roles } from './decorators/roles.decorator'
 import { Roles as RolesEnum } from './types/role.type'
 import { Auth } from '../auth/decorators/auth.decorator'
@@ -35,21 +35,24 @@ export class RolesController {
 	@Auth()
 	@Roles(RolesEnum.ADMIN)
 	@Get(':id')
-	findOne(@Param('id') id: string) {
-		return this.rolesService.findOne(id)
+	findOne(@Param('id', new ParseUUIDPipe()) id: string) {
+		return this.rolesService.findById(id)
 	}
 
 	@Auth()
 	@Roles(RolesEnum.ADMIN)
 	@Patch(':id')
-	update(@Param('id') id: string, @Body() updateRoleDto: UpdateRoleDto) {
+	update(
+		@Param('id', new ParseUUIDPipe()) id: string,
+		@Body() updateRoleDto: CreateRoleDto
+	) {
 		return this.rolesService.update(id, updateRoleDto)
 	}
 
 	@Auth()
 	@Roles(RolesEnum.ADMIN)
 	@Delete(':id')
-	remove(@Param('id') id: string) {
+	remove(@Param('id', new ParseUUIDPipe()) id: string) {
 		return this.rolesService.remove(id)
 	}
 }
