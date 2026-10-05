@@ -112,13 +112,11 @@ export class AuthService {
 	}
 
 	async login(dto: LoginDto) {
-		const user = await this.usersService.findPasswordByEmailOrUsername(
-			dto.login,
-			false
-		)
+		const { password, ...user } =
+			await this.usersService.findPasswordByEmailOrUsername(dto.login, false)
 		if (!user) throw new UnauthorizedException('Incorrect login or password.')
 
-		const isValidPassword = await verify(user.password, dto.password)
+		const isValidPassword = await verify(password, dto.password)
 		if (!isValidPassword)
 			throw new UnauthorizedException('Incorrect login or password.')
 

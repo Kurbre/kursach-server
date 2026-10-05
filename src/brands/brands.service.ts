@@ -1,26 +1,70 @@
-import { Injectable } from '@nestjs/common';
-import { CreateBrandDto } from './dto/create-brand.dto';
-import { UpdateBrandDto } from './dto/update-brand.dto';
+import { Injectable, NotFoundException } from '@nestjs/common'
+import { CreateBrandDto } from './dto/create-brand.dto'
+import { DatabaseService } from '../database/database.service'
+import { Brand } from './types/brands.type'
 
 @Injectable()
 export class BrandsService {
-  create(createBrandDto: CreateBrandDto) {
-    return 'This action adds a new brand';
-  }
+	constructor(private readonly db: DatabaseService) {}
 
-  findAll() {
-    return `This action returns all brands`;
-  }
+	async create(dto: CreateBrandDto) {
+		const { rows } = await this.db.query<Brand>(
+			`
+					INSERT INTO brands (name)
+					VALUES ($1)
+					RETURNING *
+				`,
+			[dto.name]
+		)
 
-  findOne(id: number) {
-    return `This action returns a #${id} brand`;
-  }
+		return rows[0]
+	}
 
-  update(id: number, updateBrandDto: UpdateBrandDto) {
-    return `This action updates a #${id} brand`;
-  }
+	async findAll() {
+		const { rows } = await this.db.query<Brand[]>(`SELECT * FROM brands`)
 
-  remove(id: number) {
-    return `This action removes a #${id} brand`;
-  }
+		return rows
+	}
+
+	async findById(id: string) {
+		const { rows } = await this.db.query<Brand>(
+			`SELECT * FROM brands WHERE id = $1`,
+			[id]
+		)
+
+		if (!rows[0]) throw new NotFoundException('Brand not found.')
+
+		return rows[0]
+	}
+
+	async update(id: string, dto: CreateBrandDto) {
+		await this.findById(id)
+
+		const { rows } = await this.db.query<Brand>(
+			`
+					UPDATE brands SET
+					name = $1
+					WHERE id = $2 
+					RETURNING *
+				`,
+			[dto.name, id]
+		)
+
+		return rows[0]
+	}
+
+	async remove(id: string) {
+		await this.findById(id)
+
+		await this.db.query(
+			`
+					DELETE FROM brands where id = $1
+				`,
+			[id]
+		)
+
+		return {
+			success: true
+		}
+	}
 }

@@ -40,7 +40,7 @@ export class RolesService {
 	async update(id: string, dto: CreateRoleDto) {
 		await this.findById(id)
 
-		const { rows } = await this.db.query(
+		const { rows } = await this.db.query<Role>(
 			`
 				UPDATE roles SET
 				name = $1
