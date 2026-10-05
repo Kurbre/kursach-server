@@ -25,15 +25,11 @@ export class BrandsController {
 		return this.brandsService.create(createBrandDto)
 	}
 
-	@Auth()
-	@Roles(RolesEnum.ADMIN)
 	@Get()
 	findAll() {
 		return this.brandsService.findAll()
 	}
 
-	@Auth()
-	@Roles(RolesEnum.ADMIN)
 	@Get(':id')
 	findOne(@Param('id', new ParseUUIDPipe()) id: string) {
 		return this.brandsService.findById(id)
