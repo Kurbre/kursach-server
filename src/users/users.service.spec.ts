@@ -44,7 +44,7 @@ describe('UsersService', () => {
 		expect(result).toEqual(mockUser)
 
 		expect(mockDatabaseService.query).toHaveBeenCalledWith(
-			expect.stringContaining('WHERE id = $1'),
+			expect.stringContaining('LEFT JOIN roles'),
 			[mockUser.id]
 		)
 	})
@@ -184,7 +184,14 @@ describe('UsersService', () => {
 
 		expect(mockDatabaseService.query).toHaveBeenCalledWith(
 			expect.stringContaining('INSERT INTO users'),
-			[dto.email, dto.login, dto.password, dto.name, dto.surname]
+			[
+				dto.email,
+				dto.login,
+				dto.password,
+				dto.name,
+				dto.surname,
+				'guest'
+			]
 		)
 	})
 })

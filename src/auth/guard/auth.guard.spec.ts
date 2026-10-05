@@ -21,6 +21,8 @@ describe('AuthGuard', () => {
 		login: 'test',
 		name: 'John',
 		surname: 'Doe',
+		role_id: 'role-123',
+		role: 'guest',
 		created_at: new Date(),
 		updated_at: new Date()
 	}
@@ -104,7 +106,7 @@ describe('AuthGuard', () => {
 
 		expect(mockDatabaseService.query).toHaveBeenCalledTimes(1)
 		expect(mockDatabaseService.query).toHaveBeenCalledWith(
-			expect.stringContaining('FROM users'),
+			expect.stringContaining('LEFT JOIN roles'),
 			[mockUser.id]
 		)
 
@@ -133,7 +135,7 @@ describe('AuthGuard', () => {
 		expect(mockJwtService.verifyAsync).toHaveBeenCalledWith(token)
 
 		expect(mockDatabaseService.query).toHaveBeenCalledWith(
-			expect.stringContaining('FROM users'),
+			expect.stringContaining('LEFT JOIN roles'),
 			[mockUser.id]
 		)
 	})
