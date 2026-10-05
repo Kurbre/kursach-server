@@ -219,8 +219,7 @@ describe('AuthService', () => {
 
 		expect(result).toEqual({
 			user: {
-				...mockUser,
-				password: 'hashed-password'
+				...mockUser
 			},
 			accessToken: 'token'
 		})
