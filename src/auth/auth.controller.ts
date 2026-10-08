@@ -20,6 +20,7 @@ import { LoginDto } from './dto/login.dto'
 import { RegisterResponse } from './dto/register-response.dto'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 import { UserResponse } from '../users/dto/user-response.dto'
+import { LogoutResponse } from './dto/logout-response.dto'
 
 @Controller('auth')
 export class AuthController {
@@ -109,7 +110,7 @@ export class AuthController {
 	@ApiResponse({
 		status: HttpStatus.OK,
 		description: 'Пользователь успешно разлогинен',
-		type: UserResponse
+		type: LogoutResponse
 	})
 	logout(@Res({ passthrough: true }) res: Response) {
 		res.clearCookie('accessToken')
