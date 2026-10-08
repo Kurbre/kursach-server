@@ -35,6 +35,10 @@ export class RolesController {
 		status: HttpStatus.FORBIDDEN,
 		description: 'Недостаточно прав'
 	})
+	@ApiResponse({
+		status: HttpStatus.UNAUTHORIZED,
+		description: 'Не авторизован'
+	})
 	create(@Body() createRoleDto: CreateRoleDto) {
 		return this.rolesService.create(createRoleDto)
 	}
@@ -51,6 +55,10 @@ export class RolesController {
 	@ApiResponse({
 		status: HttpStatus.FORBIDDEN,
 		description: 'Недостаточно прав'
+	})
+	@ApiResponse({
+		status: HttpStatus.UNAUTHORIZED,
+		description: 'Не авторизован'
 	})
 	findAll() {
 		return this.rolesService.findAll()
@@ -69,6 +77,10 @@ export class RolesController {
 		status: HttpStatus.FORBIDDEN,
 		description: 'Недостаточно прав'
 	})
+	@ApiResponse({
+		status: HttpStatus.UNAUTHORIZED,
+		description: 'Не авторизован'
+	})
 	findOne(@Param('id', new ParseUUIDPipe()) id: string) {
 		return this.rolesService.findById(id)
 	}
@@ -85,6 +97,10 @@ export class RolesController {
 	@ApiResponse({
 		status: HttpStatus.FORBIDDEN,
 		description: 'Недостаточно прав'
+	})
+	@ApiResponse({
+		status: HttpStatus.UNAUTHORIZED,
+		description: 'Не авторизован'
 	})
 	update(
 		@Param('id', new ParseUUIDPipe()) id: string,
@@ -105,6 +121,10 @@ export class RolesController {
 	@ApiResponse({
 		status: HttpStatus.FORBIDDEN,
 		description: 'Недостаточно прав'
+	})
+	@ApiResponse({
+		status: HttpStatus.UNAUTHORIZED,
+		description: 'Не авторизован'
 	})
 	remove(@Param('id', new ParseUUIDPipe()) id: string) {
 		return this.rolesService.remove(id)

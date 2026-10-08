@@ -17,6 +17,9 @@ import { type User } from '../users/types/user.type'
 import { AuthService } from './auth.service'
 import { GoogleAuth } from './decorators/google-auth.decorator'
 import { LoginDto } from './dto/login.dto'
+import { RegisterResponse } from './dto/register-response.dto'
+import { ApiOperation, ApiResponse } from '@nestjs/swagger'
+import { UserResponse } from '../users/dto/user-response.dto'
 
 @Controller('auth')
 export class AuthController {
@@ -35,11 +38,36 @@ export class AuthController {
 	}
 
 	@Post('register')
+	@ApiOperation({ summary: 'Зарегестрировать временного пользователя' })
+	@ApiResponse({
+		status: HttpStatus.CREATED,
+		description:
+			'Временный пользователь успешно зарегестрирован, и письмо отправлено на почту',
+		type: RegisterResponse
+	})
+	@ApiResponse({
+		status: HttpStatus.BAD_REQUEST,
+		description: 'Пользователь уже существует'
+	})
 	register(@Body() dto: CreateUserDto) {
 		return this.authService.register(dto)
 	}
 
 	@Post('register/confirm')
+	@ApiOperation({ summary: 'Подтвердить зарегестрированого пользователя' })
+	@ApiResponse({
+		status: HttpStatus.CREATED,
+		description: 'Пользователь успешно зарегестрирован',
+		type: UserResponse
+	})
+	@ApiResponse({
+		status: HttpStatus.BAD_REQUEST,
+		description: 'Временный пользователь не найден'
+	})
+	@ApiResponse({
+		status: HttpStatus.BAD_REQUEST,
+		description: 'Временный пользователь с таким email или login уже существует'
+	})
 	async registerConfirm(
 		@Query('token') token: string,
 		@Res({ passthrough: true }) res: Response
@@ -54,6 +82,16 @@ export class AuthController {
 	}
 
 	@Post('login')
+	@ApiOperation({ summary: 'Авторизовать пользователя' })
+	@ApiResponse({
+		status: HttpStatus.CREATED,
+		description: 'Пользователь успешно авторизован',
+		type: UserResponse
+	})
+	@ApiResponse({
+		status: HttpStatus.UNAUTHORIZED,
+		description: 'Неверный логин или пароль'
+	})
 	async login(
 		@Body() dto: LoginDto,
 		@Res({ passthrough: true }) res: Response
@@ -67,6 +105,12 @@ export class AuthController {
 
 	@Post('logout')
 	@HttpCode(HttpStatus.OK)
+	@ApiOperation({ summary: 'Выйти из аккаунта' })
+	@ApiResponse({
+		status: HttpStatus.OK,
+		description: 'Пользователь успешно разлогинен',
+		type: UserResponse
+	})
 	logout(@Res({ passthrough: true }) res: Response) {
 		res.clearCookie('accessToken')
 
