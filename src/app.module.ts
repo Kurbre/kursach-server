@@ -11,6 +11,7 @@ import { BullModule } from '@nestjs/bullmq'
 import { bullMQConfig } from './config/bull-mq.config'
 import { BrandsModule } from './brands/brands.module';
 import { RolesModule } from './roles/roles.module';
+import { ModelsModule } from './models/models.module';
 
 @Module({
 	imports: [
@@ -34,7 +35,8 @@ import { RolesModule } from './roles/roles.module';
 		MailModule,
 		RedisModule,
 		BrandsModule,
-		RolesModule
+		RolesModule,
+		ModelsModule
 	],
 	controllers: [],
 	providers: []
