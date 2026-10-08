@@ -28,14 +28,16 @@ export class RolesGuard implements CanActivate {
 		const user = request.user
 
 		if (!user || !user.role) {
-			throw new ForbiddenException('У пользователя отсутствует роль')
+			throw new ForbiddenException('The user lacks the role.')
 		}
 
 		// 3. Проверяем, есть ли роль пользователя в списке разрешенных
 		const hasRole = requiredRoles.includes(user.role as Roles)
 
 		if (!hasRole) {
-			throw new ForbiddenException('Недостаточно прав для выполнения операции')
+			throw new ForbiddenException(
+				'Insufficient privileges to perform the operation.'
+			)
 		}
 
 		return true

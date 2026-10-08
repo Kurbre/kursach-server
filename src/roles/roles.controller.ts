@@ -6,13 +6,17 @@ import {
 	Patch,
 	Param,
 	Delete,
-	ParseUUIDPipe
+	ParseUUIDPipe,
+	HttpStatus
 } from '@nestjs/common'
 import { RolesService } from './roles.service'
 import { CreateRoleDto } from './dto/create-role.dto'
 import { Roles } from './decorators/roles.decorator'
 import { Roles as RolesEnum } from './types/role.type'
 import { Auth } from '../auth/decorators/auth.decorator'
+import { ApiOperation, ApiResponse } from '@nestjs/swagger'
+import { RoleResponse } from './dto/role-response.dto'
+import { DeleteRoleResponse } from './dto/delete-role-response.dto'
 
 @Controller('roles')
 export class RolesController {
@@ -21,6 +25,16 @@ export class RolesController {
 	@Auth()
 	@Roles(RolesEnum.ADMIN)
 	@Post()
+	@ApiOperation({ summary: 'Создать новую роль' })
+	@ApiResponse({
+		status: HttpStatus.CREATED,
+		description: 'Роль успешно создана',
+		type: RoleResponse
+	})
+	@ApiResponse({
+		status: HttpStatus.FORBIDDEN,
+		description: 'Недостаточно прав'
+	})
 	create(@Body() createRoleDto: CreateRoleDto) {
 		return this.rolesService.create(createRoleDto)
 	}
@@ -28,6 +42,16 @@ export class RolesController {
 	@Auth()
 	@Roles(RolesEnum.ADMIN)
 	@Get()
+	@ApiOperation({ summary: 'Получить все роли' })
+	@ApiResponse({
+		status: HttpStatus.OK,
+		description: 'Роли успешно получены',
+		type: [RoleResponse]
+	})
+	@ApiResponse({
+		status: HttpStatus.FORBIDDEN,
+		description: 'Недостаточно прав'
+	})
 	findAll() {
 		return this.rolesService.findAll()
 	}
@@ -35,6 +59,16 @@ export class RolesController {
 	@Auth()
 	@Roles(RolesEnum.ADMIN)
 	@Get(':id')
+	@ApiOperation({ summary: 'Получить роль по id' })
+	@ApiResponse({
+		status: HttpStatus.OK,
+		description: 'Роль успешно получена',
+		type: RoleResponse
+	})
+	@ApiResponse({
+		status: HttpStatus.FORBIDDEN,
+		description: 'Недостаточно прав'
+	})
 	findOne(@Param('id', new ParseUUIDPipe()) id: string) {
 		return this.rolesService.findById(id)
 	}
@@ -42,6 +76,16 @@ export class RolesController {
 	@Auth()
 	@Roles(RolesEnum.ADMIN)
 	@Patch(':id')
+	@ApiOperation({ summary: 'Обновить роль по id' })
+	@ApiResponse({
+		status: HttpStatus.CREATED,
+		description: 'Роль успешно обновлена',
+		type: RoleResponse
+	})
+	@ApiResponse({
+		status: HttpStatus.FORBIDDEN,
+		description: 'Недостаточно прав'
+	})
 	update(
 		@Param('id', new ParseUUIDPipe()) id: string,
 		@Body() updateRoleDto: CreateRoleDto
@@ -52,6 +96,16 @@ export class RolesController {
 	@Auth()
 	@Roles(RolesEnum.ADMIN)
 	@Delete(':id')
+	@ApiOperation({ summary: 'Удалить роль по id' })
+	@ApiResponse({
+		status: HttpStatus.CREATED,
+		description: 'Роль успешно удалена',
+		type: DeleteRoleResponse
+	})
+	@ApiResponse({
+		status: HttpStatus.FORBIDDEN,
+		description: 'Недостаточно прав'
+	})
 	remove(@Param('id', new ParseUUIDPipe()) id: string) {
 		return this.rolesService.remove(id)
 	}

@@ -11,8 +11,6 @@ import { authQueueConstant } from './constants/auth-queue.constant'
 
 @Processor(authQueueConstant.name)
 export class AuthProcessor extends WorkerHost {
-	private readonly logger = new Logger(AuthProcessor.name)
-
 	constructor(
 		private readonly mailService: MailService,
 		@Inject(REDIS_CLIENT) private readonly redis: Redis,
@@ -32,15 +30,9 @@ export class AuthProcessor extends WorkerHost {
 	}
 
 	async sendConfirmRegister(token: string) {
-		this.logger.log('Started')
-
 		const pendingUser = await this.redis.get(`pendingUser:${token}`)
 
-		this.logger.log(`Find ${pendingUser} Token: ${token}`)
-
 		if (!pendingUser) throw new Error('Pending user not found.')
-
-		this.logger.log('Finded')
 
 		const { name, surname, email } = JSON.parse(pendingUser) as User
 
@@ -51,11 +43,7 @@ export class AuthProcessor extends WorkerHost {
 			{ title: 'Подтверждение регстрации', link, name, surname }
 		)
 
-		this.logger.log('Get template')
-
 		await this.mailService.sendMail(email, 'Подтверждение регстрации', template)
-
-		this.logger.log('Sended')
 
 		return true
 	}
