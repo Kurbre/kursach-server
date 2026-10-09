@@ -13,6 +13,7 @@ import { BrandsModule } from './brands/brands.module';
 import { RolesModule } from './roles/roles.module';
 import { ModelsModule } from './models/models.module';
 import { ColorsModule } from './colors/colors.module';
+import { ProductsModule } from './products/products.module';
 
 @Module({
 	imports: [
@@ -38,7 +39,8 @@ import { ColorsModule } from './colors/colors.module';
 		BrandsModule,
 		RolesModule,
 		ModelsModule,
-		ColorsModule
+		ColorsModule,
+		ProductsModule
 	],
 	controllers: [],
 	providers: []
