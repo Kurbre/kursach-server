@@ -12,6 +12,7 @@ import { bullMQConfig } from './config/bull-mq.config'
 import { BrandsModule } from './brands/brands.module';
 import { RolesModule } from './roles/roles.module';
 import { ModelsModule } from './models/models.module';
+import { ColorsModule } from './colors/colors.module';
 
 @Module({
 	imports: [
@@ -36,7 +37,8 @@ import { ModelsModule } from './models/models.module';
 		RedisModule,
 		BrandsModule,
 		RolesModule,
-		ModelsModule
+		ModelsModule,
+		ColorsModule
 	],
 	controllers: [],
 	providers: []

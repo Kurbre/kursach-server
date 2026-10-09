@@ -9,16 +9,15 @@ import {
 	Patch,
 	Post
 } from '@nestjs/common'
-import { ModelsService } from './models.service'
+import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 import { Auth } from '../auth/decorators/auth.decorator'
 import { Roles } from '../roles/decorators/roles.decorator'
-import { ApiOperation, ApiResponse } from '@nestjs/swagger'
-import { RoleResponse } from '../roles/dto/role-response.dto'
 import { Roles as RolesEnum } from '../roles/types/role.type'
 import { CreateModelDto } from './dto/create-model.dto'
-import { UpdateModelDto } from './dto/update-model.dto'
 import { ModelDeleteResponse } from './dto/model-delete-response.dto'
 import { ModelResponse } from './dto/model-response.dto'
+import { UpdateModelDto } from './dto/update-model.dto'
+import { ModelsService } from './models.service'
 
 @Controller('models')
 export class ModelsController {
