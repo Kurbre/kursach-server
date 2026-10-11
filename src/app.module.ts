@@ -14,6 +14,7 @@ import { RolesModule } from './roles/roles.module';
 import { ModelsModule } from './models/models.module';
 import { ColorsModule } from './colors/colors.module';
 import { ProductsModule } from './products/products.module';
+import { CartsModule } from './carts/carts.module';
 
 @Module({
 	imports: [
@@ -40,7 +41,8 @@ import { ProductsModule } from './products/products.module';
 		RolesModule,
 		ModelsModule,
 		ColorsModule,
-		ProductsModule
+		ProductsModule,
+		CartsModule
 	],
 	controllers: [],
 	providers: []
