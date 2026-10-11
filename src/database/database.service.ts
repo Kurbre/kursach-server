@@ -14,4 +14,8 @@ export class DatabaseService {
 	) {
 		return this.pool.query<T>(text, values)
 	}
+
+	getPool() {
+		return this.pool
+	}
 }
