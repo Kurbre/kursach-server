@@ -17,6 +17,7 @@ import { ProductsModule } from './products/products.module'
 import { CartsModule } from './carts/carts.module'
 import { FavoritesModule } from './favorites/favorites.module'
 import { OrdersModule } from './orders/orders.module'
+import { ReviewsModule } from './reviews/reviews.module';
 
 @Module({
 	imports: [
@@ -46,7 +47,8 @@ import { OrdersModule } from './orders/orders.module'
 		ProductsModule,
 		CartsModule,
 		FavoritesModule,
-		OrdersModule
+		OrdersModule,
+		ReviewsModule
 	],
 	controllers: [],
 	providers: []
