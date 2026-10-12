@@ -20,6 +20,12 @@ export class OrderResponseDto {
   @ApiProperty({ example: 'pending', description: 'Статус заказа' })
   status: string
 
+  @ApiProperty({ example: 'courier', description: 'Способ доставки' })
+  deliveryMethod: string
+
+  @ApiProperty({ example: {'address': 'Some address'}, description: 'Информация о доставке' })
+  deliveryInfo: Record<string, any>
+
   @ApiProperty({
     example: '2026-10-10T14:20:00.000Z',
     description: 'Дата создания заказа'

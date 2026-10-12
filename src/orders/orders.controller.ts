@@ -14,7 +14,9 @@ import { GetAuthUser } from '../users/decorators/users.decorator'
 import { OrdersService } from './orders.service'
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto'
 import { OrderResponseDto } from './dto/order-response.dto'
+import { CreateOrderDto } from './dto/create-order.dto'
 
+@ApiTags('orders')
 @Controller('orders')
 export class OrdersController {
 	constructor(private readonly ordersService: OrdersService) {}
@@ -62,8 +64,11 @@ export class OrdersController {
 		description: 'Корзина пуста'
 	})
 	@Auth()
-	async createOrderFromCart(@GetAuthUser('id') userId: string) {
-		return this.ordersService.createOrderFromCart(userId)
+	async createOrderFromCart(
+		@GetAuthUser('id') userId: string,
+		@Body() dto: CreateOrderDto
+	) {
+		return this.ordersService.createOrderFromCart(userId, dto)
 	}
 
 	@Put(':id/status')

@@ -1,4 +1,15 @@
+import { IsOptional, IsEnum } from 'class-validator';
+
+export enum DeliveryMethod {
+  COURIER = 'courier',
+  NOVA_POSHTA = 'nova_poshta'
+}
+
 export class CreateOrderDto {
-  // This DTO is intentionally empty as orders are created from cart contents
-  // The user ID is obtained from authentication context
+  @IsOptional()
+  @IsEnum(DeliveryMethod)
+  deliveryMethod?: DeliveryMethod;
+
+  @IsOptional()
+  deliveryInfo?: Record<string, any>;
 }
