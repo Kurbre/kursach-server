@@ -2,6 +2,7 @@ import {
 	BadRequestException,
 	Inject,
 	Injectable,
+	NotFoundException,
 	UnauthorizedException
 } from '@nestjs/common'
 import { UsersService } from '../users/users.service'
@@ -19,6 +20,7 @@ import { JwtService } from '@nestjs/jwt'
 import { LoginDto } from './dto/login.dto'
 import { Profile } from 'passport-google-oauth20'
 import { Roles } from '../roles/types/role.type'
+import { ResetPasswordDto } from '../users/dto/reset-password.dto'
 
 @Injectable()
 export class AuthService {
@@ -281,6 +283,4 @@ export class AuthService {
 	private getPendingUser(token: string) {
 		return `pendingUser:${token}`
 	}
-
-	// TODO Create reset-password
 }

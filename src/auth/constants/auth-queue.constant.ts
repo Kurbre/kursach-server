@@ -1,4 +1,5 @@
 export const authQueueConstant = {
 	name: 'auth',
-	sendRegisterMail: 'sendRegisterMail'
+	sendRegisterMail: 'sendRegisterMail',
+	sendResetPassword: 'sendResetPassword'
 }
