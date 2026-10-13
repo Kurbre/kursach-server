@@ -7,7 +7,8 @@ import {
 	Param,
 	ParseUUIDPipe,
 	Patch,
-	Post
+	Post,
+	Query
 } from '@nestjs/common'
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { Auth } from '../auth/decorators/auth.decorator'
@@ -17,7 +18,13 @@ import { ColorsService } from './colors.service'
 import { CreateColorDto } from './dto/create-color.dto'
 import { UpdateColorDto } from './dto/update-color.dto'
 import { ColorResponse } from './dto/color-response.dto'
+import { PaginationDto } from '../common/dto/pagination.dto'
 import { ColorDeleteResponse } from './dto/color-delete-response.dto'
+
+export class PaginatedColorResponseDto {
+  data: ColorResponse[];
+  total: number;
+}
 
 @Controller('colors')
 export class ColorsController {
@@ -49,10 +56,10 @@ export class ColorsController {
 	@ApiResponse({
 		status: HttpStatus.OK,
 		description: 'Цвета успешно получены',
-		type: [ColorResponse]
+		type: PaginatedColorResponseDto
 	})
-	findAll() {
-		return this.colorsService.findAll()
+	findAll(@Query() pagination: PaginationDto) {
+		return this.colorsService.findAll(pagination);
 	}
 
 	@Get(':id')

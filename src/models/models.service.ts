@@ -3,6 +3,7 @@ import { DatabaseService } from '../database/database.service'
 import { CreateModelDto } from './dto/create-model.dto'
 import { Model } from './types/models.type'
 import { UpdateModelDto } from './dto/update-model.dto'
+import { PaginationDto } from '../common/dto/pagination.dto'
 
 @Injectable()
 export class ModelsService {
@@ -21,10 +22,19 @@ export class ModelsService {
 		return rows[0]
 	}
 
-	async findAll() {
-		const { rows } = await this.db.query<Model[]>(`SELECT * FROM models`)
+	async findAll(pagination: PaginationDto): Promise<{ data: Model[]; total: number }> {
+		const page = pagination.page ?? 1;
+		const limit = pagination.limit ?? 10;
+		const offset = (page - 1) * limit;
 
-		return rows
+		const countQuery = `SELECT COUNT(*) AS total FROM models`;
+		const { rows: countRows } = await this.db.query<{ total: number }>(countQuery);
+		const total = countRows[0]?.total ?? 0;
+
+		const dataQuery = `SELECT * FROM models LIMIT $1 OFFSET $2`;
+		const { rows } = await this.db.query<Model>(dataQuery, [limit, offset]);
+
+		return { data: rows, total };
 	}
 
 	async findById(id: string) {

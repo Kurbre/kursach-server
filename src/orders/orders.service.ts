@@ -6,12 +6,20 @@ import { OrderItemResponseDto } from './dto/order-item-response.dto'
 import { ProductVariantResponseDto } from '../products/dto/product-variant-response.dto'
 import { ColorResponse } from '../colors/dto/color-response.dto'
 import { CreateOrderDto } from './dto/create-order.dto'
+import { PaginationDto } from '../common/dto/pagination.dto'
 
 @Injectable()
 export class OrdersService {
 	constructor(private readonly db: DatabaseService) {}
 
-	async getUserOrders(userId: string): Promise<OrderResponseDto[]> {
+	async getUserOrders(userId: string, pagination: PaginationDto): Promise<{ data: OrderResponseDto[]; total: number }> {
+		const page = pagination.page ?? 1;
+		const limit = pagination.limit ?? 10;
+		const offset = (page - 1) * limit;
+		const countQuery = `SELECT COUNT(*) AS total FROM orders o WHERE o.user_id = $1`;
+		const { rows: countRows } = await this.db.query(countQuery, [userId]);
+		const total = parseInt(countRows[0].total, 10);
+
 		const query = `
       SELECT
         o.id,
@@ -54,12 +62,12 @@ export class OrdersService {
       WHERE o.user_id = $1
       GROUP BY o.id, o.user_id, o.total_price, o.status, o.delivery_method, o.delivery_info, o.created_at, o.updated_at
       ORDER BY o.created_at DESC
+      LIMIT $2 OFFSET $3
     `
 
 		const { rows } = await this.db.query(query, [userId])
 
-		return rows.map(row => {
-			// Handle items - could be already parsed or JSON string
+		const data = rows.map(row => {
 			let items: any[] = []
 			if (row.items) {
 				if (typeof row.items === 'string') {
@@ -83,21 +91,20 @@ export class OrdersService {
 				deliveryInfo: row.delivery_info,
 				createdAt: row.created_at,
 				updatedAt: row.updated_at,
-				items: items.map(
-					(item: any) =>
-						({
-							...item,
-							price: parseFloat(item.price),
-							productVariant: item.productVariant
-								? ({
-										...item.productVariant,
-										color: item.productVariant.color as ColorResponse
-									} as ProductVariantResponseDto)
-								: null
-						}) as OrderItemResponseDto
-				)
-			} as OrderResponseDto
-		})
+				items: items.map((item: any) => ({
+					...item,
+					price: parseFloat(item.price),
+					productVariant: item.productVariant
+						? ({
+								...item.productVariant,
+								color: item.productVariant.color as ColorResponse
+							} as ProductVariantResponseDto)
+						: null
+				}) as OrderItemResponseDto)
+			} as OrderResponseDto;
+		});
+
+		return { data, total };
 	}
 
 	async getOrderById(

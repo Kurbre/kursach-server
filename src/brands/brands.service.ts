@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common'
 import { CreateBrandDto } from './dto/create-brand.dto'
 import { DatabaseService } from '../database/database.service'
 import { Brand } from './types/brands.type'
+import { PaginationDto } from '../common/dto/pagination.dto'
 
 @Injectable()
 export class BrandsService {
@@ -20,10 +21,19 @@ export class BrandsService {
 		return rows[0]
 	}
 
-	async findAll() {
-		const { rows } = await this.db.query<Brand[]>(`SELECT * FROM brands`)
+	async findAll(pagination: PaginationDto): Promise<{ data: Brand[]; total: number }> {
+		const page = pagination.page ?? 1;
+		const limit = pagination.limit ?? 10;
+		const offset = (page - 1) * limit;
 
-		return rows
+		const countQuery = `SELECT COUNT(*) AS total FROM brands`;
+		const { rows: countRows } = await this.db.query<{ total: number }>(countQuery);
+		const total = countRows[0]?.total ?? 0;
+
+		const dataQuery = `SELECT * FROM brands LIMIT $1 OFFSET $2`;
+		const { rows } = await this.db.query<Brand>(dataQuery, [limit, offset]);
+
+		return { data: rows, total };
 	}
 
 	async findById(id: string) {

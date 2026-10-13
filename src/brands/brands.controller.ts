@@ -7,7 +7,8 @@ import {
 	Param,
 	Delete,
 	ParseUUIDPipe,
-	HttpStatus
+	HttpStatus,
+	Query
 } from '@nestjs/common'
 import { BrandsService } from './brands.service'
 import { CreateBrandDto } from './dto/create-brand.dto'
@@ -17,6 +18,12 @@ import { Roles as RolesEnum } from '../roles/types/role.type'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 import { BrandResponse } from './dto/brand-response.dto'
 import { BrandDeleteResponse } from './dto/brand-delete-response.dto'
+import { PaginationDto } from '../common/dto/pagination.dto'
+
+export class PaginatedBrandResponseDto {
+  data: BrandResponse[];
+  total: number;
+}
 
 @Controller('brands')
 export class BrandsController {
@@ -48,10 +55,10 @@ export class BrandsController {
 	@ApiResponse({
 		status: HttpStatus.OK,
 		description: 'Бренды успешно получены',
-		type: [BrandResponse]
+		type: PaginatedBrandResponseDto
 	})
-	findAll() {
-		return this.brandsService.findAll()
+	findAll(@Query() pagination: PaginationDto) {
+		return this.brandsService.findAll(pagination);
 	}
 
 	@Get(':id')

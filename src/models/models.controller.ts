@@ -7,7 +7,8 @@ import {
 	Param,
 	ParseUUIDPipe,
 	Patch,
-	Post
+	Post,
+	Query
 } from '@nestjs/common'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 import { Auth } from '../auth/decorators/auth.decorator'
@@ -18,6 +19,7 @@ import { ModelDeleteResponse } from './dto/model-delete-response.dto'
 import { ModelResponse } from './dto/model-response.dto'
 import { UpdateModelDto } from './dto/update-model.dto'
 import { ModelsService } from './models.service'
+import { PaginationDto } from '../common/dto/pagination.dto'
 
 @Controller('models')
 export class ModelsController {
@@ -61,8 +63,8 @@ export class ModelsController {
 		status: HttpStatus.UNAUTHORIZED,
 		description: 'Не авторизован'
 	})
-	findAll() {
-		return this.modelsService.findAll()
+	findAll(@Query() pagination: PaginationDto) {
+		return this.modelsService.findAll(pagination);
 	}
 
 	@Auth()

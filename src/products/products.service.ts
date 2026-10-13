@@ -3,6 +3,8 @@ import { DatabaseService } from '../database/database.service'
 import { CreateFullProductDto } from './dto/create-full-product.dto'
 import { Product, ProductVariant } from './types/products.type'
 import { UpdateFullProductDto } from './dto/update-full-product.dto'
+import { PaginationDto } from '../common/dto/pagination.dto'
+import { ProductFilterDto } from './dto/product-filter.dto'
 
 @Injectable()
 export class ProductsService {
@@ -84,9 +86,57 @@ export class ProductsService {
 		}
 	}
 
-	async findAll(limit = 20, offset = 0) {
-		const query = `
-			SELECT 
+	async findAll(pagination: PaginationDto, filter: ProductFilterDto): Promise<{ data: any[]; total: number }> {
+		const page = pagination.page ?? 1;
+		const limit = pagination.limit ?? 10;
+		const offset = (page - 1) * limit;
+
+		// Build WHERE conditions and values
+		const conditions = [];
+		const values: any[] = [];
+
+		// Search: search in p.sku, m.name, b.name
+		if (filter.search) {
+			const searchTerm = `%${filter.search}%`;
+			conditions.push(`(p.sku ILIKE $${values.length + 1} OR m.name ILIKE $${values.length + 2} OR b.name ILIKE $${values.length + 3})`);
+			values.push(searchTerm, searchTerm, searchTerm);
+		}
+
+		// Filter by brandId
+		if (filter.brandId) {
+			conditions.push(`b.id = $${values.length + 1}`);
+			values.push(filter.brandId);
+		}
+
+		// Filter by modelId
+		if (filter.modelId) {
+			conditions.push(`p.model_id = $${values.length + 1}`);
+			values.push(filter.modelId);
+		}
+
+		// Filter by colorId: product has at least one variant with this color
+		if (filter.colorId) {
+			conditions.push(`EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND pv.color_id = $${values.length + 1})`);
+			values.push(filter.colorId);
+		}
+
+		// Filter by minPrice: product has at least one variant with price >= minPrice
+		if (filter.minPrice !== undefined && filter.minPrice !== null) {
+			conditions.push(`EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND pv.price >= $${values.length + 1})`);
+			values.push(filter.minPrice);
+		}
+
+		// Filter by maxPrice: product has at least one variant with price <= maxPrice
+		if (filter.maxPrice !== undefined && filter.maxPrice !== null) {
+			conditions.push(`EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND pv.price <= $${values.length + 1})`);
+			values.push(filter.maxPrice);
+		}
+
+		const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+		// Data query: get paginated products with variants
+		const dataQuery = `
+			SELECT
 				p.id,
 				p.sku,
 				p.is_active,
@@ -112,13 +162,30 @@ export class ProductsService {
 			JOIN models m ON p.model_id = m.id
 			JOIN brands b ON m.brand_id = b.id
 			LEFT JOIN product_variants pv ON pv.product_id = p.id
+			${whereClause}
 			GROUP BY p.id, m.name, b.name
 			ORDER BY p.created_at DESC
-			LIMIT $1 OFFSET $2
-		`
+			LIMIT $${values.length + 1} OFFSET $${values.length + 2}
+		`;
 
-		const { rows } = await this.db.query(query, [limit, offset])
-		return rows
+		// Add limit and offset to values
+		const dataValues = [...values, limit, offset];
+
+		const { rows: dataRows } = await this.db.query<any>(dataQuery, dataValues);
+
+		// Count query: count distinct products matching the filters
+		const countQuery = `
+			SELECT COUNT(DISTINCT p.id) AS total
+			FROM products p
+			JOIN models m ON p.model_id = m.id
+			JOIN brands b ON m.brand_id = b.id
+			${whereClause}
+		`;
+
+		const { rows: countRows } = await this.db.query<{ total: number }>(countQuery, values);
+		const total = countRows[0]?.total ?? 0;
+
+		return { data: dataRows, total };
 	}
 
 	async findFullById(idOrSku: string) {

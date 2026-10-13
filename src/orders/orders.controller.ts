@@ -6,7 +6,8 @@ import {
 	Param,
 	ParseUUIDPipe,
 	Post,
-	Put
+	Put,
+	Query
 } from '@nestjs/common'
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { Auth } from '../auth/decorators/auth.decorator'
@@ -15,6 +16,12 @@ import { OrdersService } from './orders.service'
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto'
 import { OrderResponseDto } from './dto/order-response.dto'
 import { CreateOrderDto } from './dto/create-order.dto'
+import { PaginationDto } from '../common/dto/pagination.dto'
+
+export class PaginatedOrderResponseDto {
+  data: OrderResponseDto[];
+  total: number;
+}
 
 @ApiTags('orders')
 @Controller('orders')
@@ -26,11 +33,14 @@ export class OrdersController {
 	@ApiResponse({
 		status: 200,
 		description: 'Список заказов успешно получен',
-		type: [OrderResponseDto]
+		type: PaginatedOrderResponseDto
 	})
 	@Auth()
-	async getUserOrders(@GetAuthUser('id') userId: string) {
-		return this.ordersService.getUserOrders(userId)
+	async getUserOrders(
+		@GetAuthUser('id') userId: string,
+		@Query() pagination: PaginationDto
+	) {
+		return this.ordersService.getUserOrders(userId, pagination);
 	}
 
 	@Get(':id')

@@ -19,6 +19,13 @@ import { ProductsService } from './products.service'
 import { UpdateFullProductDto } from './dto/update-full-product.dto'
 import { ProductResponseDto } from './dto/product-response.dto'
 import { ProductDeleteResponseDto } from './dto/product-delete-response.dto'
+import { PaginationDto } from '../common/dto/pagination.dto'
+import { ProductFilterDto } from './dto/product-filter.dto'
+
+export class PaginatedProductResponseDto {
+  data: ProductResponseDto[];
+  total: number;
+}
 
 @Controller('products')
 export class ProductsController {
@@ -49,18 +56,13 @@ export class ProductsController {
 
 	@Get()
 	@ApiOperation({ summary: 'Получить список всех товаров с вариациями' })
-	@ApiQuery({ name: 'limit', required: false, example: 20 })
-	@ApiQuery({ name: 'offset', required: false, example: 0 })
 	@ApiResponse({
 		status: HttpStatus.OK,
 		description: 'Список товаров успешно получен',
-		type: [ProductResponseDto]
+		type: PaginatedProductResponseDto
 	})
-	findAll(@Query('limit') limit?: number, @Query('offset') offset?: number) {
-		return this.productsService.findAll(
-			limit ? Number(limit) : 20,
-			offset ? Number(offset) : 0
-		)
+	findAll(@Query() pagination: PaginationDto, @Query() filter: ProductFilterDto) {
+		return this.productsService.findAll(pagination, filter);
 	}
 
 	@Get(':idOrSku')
@@ -121,7 +123,7 @@ export class ProductsController {
 		description: 'Недостаточно прав'
 	})
 	@ApiResponse({
-		status: HttpStatus.UNAUTHORIZED,
+		status: HttpStatus.UNAUTHORIZED ,
 		description: 'Не авторизован'
 	})
 	remove(@Param('id', new ParseUUIDPipe()) id: string) {

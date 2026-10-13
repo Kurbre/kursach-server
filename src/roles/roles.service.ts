@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common'
 import { CreateRoleDto } from './dto/create-role.dto'
 import { DatabaseService } from '../database/database.service'
 import { Role } from './types/role.type'
+import { PaginationDto } from '../common/dto/pagination.dto'
 
 @Injectable()
 export class RolesService {
@@ -20,10 +21,19 @@ export class RolesService {
 		return rows[0]
 	}
 
-	async findAll() {
-		const { rows } = await this.db.query<Role[]>(`SELECT * FROM roles`)
+	async findAll(pagination: PaginationDto): Promise<{ data: Role[]; total: number }> {
+		const page = pagination.page ?? 1;
+		const limit = pagination.limit ?? 10;
+		const offset = (page - 1) * limit;
 
-		return rows
+		const countQuery = `SELECT COUNT(*) AS total FROM roles`;
+		const { rows: countRows } = await this.db.query<{ total: number }>(countQuery);
+		const total = countRows[0]?.total ?? 0;
+
+		const dataQuery = `SELECT * FROM roles LIMIT $1 OFFSET $2`;
+		const { rows } = await this.db.query<Role>(dataQuery, [limit, offset]);
+
+		return { data: rows, total };
 	}
 
 	async findById(id: string) {

@@ -3,6 +3,7 @@ import { DatabaseService } from '../database/database.service'
 import { Color } from './types/colors.type'
 import { UpdateColorDto } from './dto/update-color.dto'
 import { CreateColorDto } from './dto/create-color.dto'
+import { PaginationDto } from '../common/dto/pagination.dto'
 
 @Injectable()
 export class ColorsService {
@@ -21,10 +22,19 @@ export class ColorsService {
 		return rows[0]
 	}
 
-	async findAll() {
-		const { rows } = await this.db.query<Color>(`SELECT * FROM colors`)
+	async findAll(pagination: PaginationDto): Promise<{ data: Color[]; total: number }> {
+		const page = pagination.page ?? 1;
+		const limit = pagination.limit ?? 10;
+		const offset = (page - 1) * limit;
 
-		return rows
+		const countQuery = `SELECT COUNT(*) AS total FROM colors`;
+		const { rows: countRows } = await this.db.query<{ total: number }>(countQuery);
+		const total = countRows[0]?.total ?? 0;
+
+		const dataQuery = `SELECT * FROM colors LIMIT $1 OFFSET $2`;
+		const { rows } = await this.db.query<Color>(dataQuery, [limit, offset]);
+
+		return { data: rows, total };
 	}
 
 	async findById(id: string) {

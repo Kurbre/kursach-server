@@ -7,7 +7,8 @@ import {
 	Param,
 	Delete,
 	ParseUUIDPipe,
-	HttpStatus
+	HttpStatus,
+	Query
 } from '@nestjs/common'
 import { RolesService } from './roles.service'
 import { CreateRoleDto } from './dto/create-role.dto'
@@ -17,6 +18,12 @@ import { Auth } from '../auth/decorators/auth.decorator'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 import { RoleResponse } from './dto/role-response.dto'
 import { DeleteRoleResponse } from './dto/delete-role-response.dto'
+import { PaginationDto } from '../common/dto/pagination.dto'
+
+export class PaginatedRoleResponseDto {
+  data: RoleResponse[];
+  total: number;
+}
 
 @Controller('roles')
 export class RolesController {
@@ -50,7 +57,7 @@ export class RolesController {
 	@ApiResponse({
 		status: HttpStatus.OK,
 		description: 'Роли успешно получены',
-		type: [RoleResponse]
+		type: PaginatedRoleResponseDto
 	})
 	@ApiResponse({
 		status: HttpStatus.FORBIDDEN,
@@ -60,8 +67,8 @@ export class RolesController {
 		status: HttpStatus.UNAUTHORIZED,
 		description: 'Не авторизован'
 	})
-	findAll() {
-		return this.rolesService.findAll()
+	findAll(@Query() pagination: PaginationDto) {
+		return this.rolesService.findAll(pagination);
 	}
 
 	@Auth()
