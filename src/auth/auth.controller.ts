@@ -138,6 +138,8 @@ export class AuthController {
 
 		this.setAccessTokenCookie(accessToken, res)
 
-		return user
+		return res.redirect(
+			`${this.configService.getOrThrow<string>('CLIENT_URL')}/auth/oauth`
+		)
 	}
 }
