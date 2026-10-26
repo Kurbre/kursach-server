@@ -201,7 +201,10 @@ describe('AuthController', () => {
 			)
 
 			expect(mockService.generateAccessToken).toHaveBeenCalledTimes(1)
-			expect(mockService.generateAccessToken).toHaveBeenCalledWith(mockUser.id)
+			expect(mockService.generateAccessToken).toHaveBeenCalledWith(
+				mockUser.id,
+				mockUser.role
+			)
 
 			expect(mockConfigService.get).toHaveBeenCalledWith('NODE_ENV')
 

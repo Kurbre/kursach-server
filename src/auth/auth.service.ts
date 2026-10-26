@@ -103,7 +103,10 @@ export class AuthService {
 			surname
 		})
 
-		const accessToken = await this.generateAccessToken(user.id)
+		const accessToken = await this.generateAccessToken(
+			user.id,
+			user.role || 'guest'
+		)
 
 		await this.redis.del(this.getPendingUser(token))
 
@@ -127,7 +130,10 @@ export class AuthService {
 		if (!isValidPassword)
 			throw new UnauthorizedException('Incorrect login or password.')
 
-		const accessToken = await this.generateAccessToken(result.id)
+		const accessToken = await this.generateAccessToken(
+			result.id,
+			result.role || 'guest'
+		)
 
 		return {
 			user,
@@ -276,8 +282,8 @@ export class AuthService {
 		return user
 	}
 
-	async generateAccessToken(id: string) {
-		return this.jwtService.signAsync({ sub: id })
+	async generateAccessToken(id: string, role: string) {
+		return this.jwtService.signAsync({ sub: id, role })
 	}
 
 	private getPendingUser(token: string) {

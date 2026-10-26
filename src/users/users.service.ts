@@ -70,8 +70,20 @@ export class UsersService {
 	async findPasswordByEmailOrUsername(login: string, isValidation = true) {
 		const { rows } = await this.db.query<User & { password: string }>(
 			`
-				SELECT * from users
-				WHERE email = $1 OR login = $1
+				SELECT
+					u.id,
+					u.email,
+					u.login,
+					u.name,
+					u.surname,
+					u.password,
+					u.role_id,
+					r.name AS role,
+					u.created_at,
+					u.updated_at
+				FROM users u
+				LEFT JOIN roles r ON u.role_id = r.id
+				WHERE u.email = $1 OR u.login = $1
 			`,
 			[login]
 		)

@@ -165,7 +165,10 @@ describe('AuthService', () => {
 		expect(mockUsersService.create).toHaveBeenCalledWith(user)
 		expect(result.user).toEqual(mockUser)
 
-		expect(generateAccessTokenSpy).toHaveBeenCalledWith(mockUser.id)
+		expect(generateAccessTokenSpy).toHaveBeenCalledWith(
+			mockUser.id,
+			mockUser.role
+		)
 
 		expect(mockRedis.del).toHaveBeenCalledWith(
 			expect.stringContaining('pendingUser')
@@ -215,7 +218,10 @@ describe('AuthService', () => {
 
 		expect(argon2.verify).toHaveBeenCalledWith('hashed-password', dto.password)
 
-		expect(generateAccessTokenSpy).toHaveBeenCalledWith(mockUser.id)
+		expect(generateAccessTokenSpy).toHaveBeenCalledWith(
+			mockUser.id,
+			mockUser.role
+		)
 
 		expect(result).toEqual({
 			user: {

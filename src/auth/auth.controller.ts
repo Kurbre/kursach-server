@@ -131,7 +131,10 @@ export class AuthController {
 		@GetAuthUser() user: User,
 		@Res({ passthrough: true }) res: Response
 	) {
-		const accessToken = await this.authService.generateAccessToken(user.id)
+		const accessToken = await this.authService.generateAccessToken(
+			user.id,
+			user.role || 'guest'
+		)
 
 		this.setAccessTokenCookie(accessToken, res)
 

@@ -1,6 +1,9 @@
 import { NotFoundException } from '@nestjs/common'
+import { getQueueToken } from '@nestjs/bullmq'
 import { Test } from '@nestjs/testing'
+import { authQueueConstant } from '../auth/constants/auth-queue.constant'
 import { DatabaseService } from '../database/database.service'
+import { REDIS_CLIENT } from '../redis/redis.module'
 import { CreateUserDto } from './dto/create-user.dto'
 import { mockUser } from './mocks/users.mock'
 import { UsersService } from './users.service'
@@ -21,6 +24,14 @@ describe('UsersService', () => {
 				{
 					provide: DatabaseService,
 					useValue: mockDatabaseService
+				},
+				{
+					provide: REDIS_CLIENT,
+					useValue: {}
+				},
+				{
+					provide: getQueueToken(authQueueConstant.name),
+					useValue: {}
 				}
 			]
 		}).compile()
@@ -123,7 +134,11 @@ describe('UsersService', () => {
 		expect(result).toEqual({ ...mockUser, password: 'qwerty123' })
 
 		expect(mockDatabaseService.query).toHaveBeenCalledWith(
-			expect.stringContaining('WHERE email = $1 OR login = $1'),
+			expect.stringContaining('WHERE u.email = $1 OR u.login = $1'),
+			[mockUser.email]
+		)
+		expect(mockDatabaseService.query).toHaveBeenCalledWith(
+			expect.stringContaining('LEFT JOIN roles'),
 			[mockUser.email]
 		)
 	})
@@ -148,7 +163,7 @@ describe('UsersService', () => {
 		expect(result).toEqual({ ...mockUser, password: 'qwerty123' })
 
 		expect(mockDatabaseService.query).toHaveBeenCalledWith(
-			expect.stringContaining('WHERE email = $1 OR login = $1'),
+			expect.stringContaining('WHERE u.email = $1 OR u.login = $1'),
 			[mockUser.login]
 		)
 	})
