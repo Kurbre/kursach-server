@@ -6,19 +6,40 @@ import {
 	Param,
 	ParseUUIDPipe,
 	Post,
-	Put
+	Put,
+	Query
 } from '@nestjs/common'
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 import { Auth } from '../auth/decorators/auth.decorator'
 import { GetAuthUser } from '../users/decorators/users.decorator'
 import { ReviewsService } from './reviews.service'
 import { CreateReviewDto } from './dto/create-review.dto'
 import { UpdateReviewDto } from './dto/update-review.dto'
 import { ReviewResponseDto } from './dto/review-response.dto'
+import { ParsePostgresUuidPipe } from '../common/pipes/parse-postgres-uuid.pipe'
+import { Roles } from '../roles/decorators/roles.decorator'
+import { Roles as RolesEnum } from '../roles/types/role.type'
+import { PaginationDto } from '../common/dto/pagination.dto'
 
 @Controller('reviews')
 export class ReviewsController {
 	constructor(private readonly reviewsService: ReviewsService) {}
+
+	@Get('admin/all')
+	@Auth()
+	@Roles(RolesEnum.ADMIN)
+	async getAllReviewsForAdmin(@Query() pagination: PaginationDto) {
+		return this.reviewsService.getAllReviewsForAdmin(pagination)
+	}
+
+	@Delete('admin/:id')
+	@Auth()
+	@Roles(RolesEnum.ADMIN)
+	async deleteReviewAsAdmin(
+		@Param('id', new ParsePostgresUuidPipe()) id: string
+	) {
+		return this.reviewsService.deleteReviewAsAdmin(id)
+	}
 
 	@Get('product/:id')
 	@ApiOperation({ summary: 'Получить все отзывы для товара' })
@@ -28,7 +49,7 @@ export class ReviewsController {
 		type: [ReviewResponseDto]
 	})
 	@Auth()
-	async getReviewsByProduct(@Param('id', new ParseUUIDPipe()) id: string) {
+	async getReviewsByProduct(@Param('id', new ParsePostgresUuidPipe()) id: string) {
 		return this.reviewsService.getReviewsByProduct(id)
 	}
 
@@ -62,7 +83,7 @@ export class ReviewsController {
 	@Auth()
 	async createReview(
 		@GetAuthUser('id') userId: string,
-		@Param('productId', new ParseUUIDPipe()) productId: string,
+		@Param('productId', new ParsePostgresUuidPipe()) productId: string,
 		@Body() dto: CreateReviewDto
 	) {
 		return this.reviewsService.createReview(userId, productId, dto)

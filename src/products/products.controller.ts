@@ -5,7 +5,6 @@ import {
 	Get,
 	HttpStatus,
 	Param,
-	ParseUUIDPipe,
 	Patch,
 	Post,
 	Query
@@ -21,6 +20,7 @@ import { ProductResponseDto } from './dto/product-response.dto'
 import { ProductDeleteResponseDto } from './dto/product-delete-response.dto'
 import { PaginationDto } from '../common/dto/pagination.dto'
 import { ProductFilterDto } from './dto/product-filter.dto'
+import { ParsePostgresUuidPipe } from '../common/pipes/parse-postgres-uuid.pipe'
 
 export class PaginatedProductResponseDto {
   data: ProductResponseDto[];
@@ -103,7 +103,7 @@ export class ProductsController {
 		description: 'Не авторизован'
 	})
 	update(
-		@Param('id', new ParseUUIDPipe()) id: string,
+		@Param('id', new ParsePostgresUuidPipe()) id: string,
 		@Body() dto: UpdateFullProductDto
 	) {
 		return this.productsService.updateFullProduct(id, dto)
@@ -126,7 +126,7 @@ export class ProductsController {
 		status: HttpStatus.UNAUTHORIZED ,
 		description: 'Не авторизован'
 	})
-	remove(@Param('id', new ParseUUIDPipe()) id: string) {
+	remove(@Param('id', new ParsePostgresUuidPipe()) id: string) {
 		return this.productsService.remove(id)
 	}
 }

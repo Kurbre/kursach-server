@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { DatabaseService } from '../database/database.service'
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto'
 import { OrderResponseDto } from './dto/order-response.dto'
@@ -13,11 +13,20 @@ export class OrdersService {
 	constructor(private readonly db: DatabaseService) {}
 
 	async getUserOrders(userId: string, pagination: PaginationDto): Promise<{ data: OrderResponseDto[]; total: number }> {
+		return this.getOrders(pagination, userId)
+	}
+
+	async getAllOrders(pagination: PaginationDto): Promise<{ data: OrderResponseDto[]; total: number }> {
+		return this.getOrders(pagination)
+	}
+
+	private async getOrders(pagination: PaginationDto, userId?: string): Promise<{ data: OrderResponseDto[]; total: number }> {
 		const page = pagination.page ?? 1;
 		const limit = pagination.limit ?? 10;
 		const offset = (page - 1) * limit;
-		const countQuery = `SELECT COUNT(*) AS total FROM orders o WHERE o.user_id = $1`;
-		const { rows: countRows } = await this.db.query(countQuery, [userId]);
+		const whereClause = userId ? 'WHERE o.user_id = $1' : ''
+		const countQuery = `SELECT COUNT(*) AS total FROM orders o ${whereClause}`;
+		const { rows: countRows } = await this.db.query(countQuery, userId ? [userId] : []);
 		const total = parseInt(countRows[0].total, 10);
 
 		const query = `
@@ -35,11 +44,11 @@ export class OrdersService {
           json_agg(
             DISTINCT jsonb_build_object(
               'id', oi.id,
-              'order_id', oi.order_id,
-              'product_variant_id', oi.product_variant_id,
+              'orderId', oi.order_id,
+              'productVariantId', oi.product_variant_id,
               'quantity', oi.quantity,
               'price', oi.price,
-              'product_variant', jsonb_build_object(
+              'productVariant', jsonb_build_object(
                 'id', pv.id,
                 'ram_gb', pv.ram_gb,
                 'storage_gb', pv.storage_gb,
@@ -57,15 +66,15 @@ export class OrdersService {
         ) AS items
       FROM orders o
       LEFT JOIN order_items oi ON oi.order_id = o.id
-      LEFT JOIN product_variants pv ON pv.product_id = oi.product_variant_id
+      LEFT JOIN product_variants pv ON pv.id = oi.product_variant_id
       LEFT JOIN colors c ON pv.color_id = c.id
-      WHERE o.user_id = $1
+      ${whereClause}
       GROUP BY o.id, o.user_id, o.total_price, o.status, o.delivery_method, o.delivery_info, o.created_at, o.updated_at
       ORDER BY o.created_at DESC
-      LIMIT $2 OFFSET $3
+      LIMIT $${userId ? 2 : 1} OFFSET $${userId ? 3 : 2}
     `
 
-		const { rows } = await this.db.query(query, [userId])
+		const { rows } = await this.db.query(query, userId ? [userId, limit, offset] : [limit, offset])
 
 		const data = rows.map(row => {
 			let items: any[] = []
@@ -126,11 +135,11 @@ export class OrdersService {
           json_agg(
             DISTINCT jsonb_build_object(
               'id', oi.id,
-              'order_id', oi.order_id,
-              'product_variant_id', oi.product_variant_id,
+              'orderId', oi.order_id,
+              'productVariantId', oi.product_variant_id,
               'quantity', oi.quantity,
               'price', oi.price,
-              'product_variant', jsonb_build_object(
+              'productVariant', jsonb_build_object(
                 'id', pv.id,
                 'ram_gb', pv.ram_gb,
                 'storage_gb', pv.storage_gb,
@@ -148,7 +157,7 @@ export class OrdersService {
         ) AS items
       FROM orders o
       LEFT JOIN order_items oi ON oi.order_id = o.id
-      LEFT JOIN product_variants pv ON pv.product_id = oi.product_variant_id
+      LEFT JOIN product_variants pv ON pv.id = oi.product_variant_id
       LEFT JOIN colors c ON pv.color_id = c.id
       WHERE o.id = $1 AND o.user_id = $2
       GROUP BY o.id, o.user_id, o.total_price, o.status, o.delivery_method, o.delivery_info, o.created_at, o.updated_at
@@ -241,9 +250,12 @@ export class OrdersService {
 			const itemsToCreate = []
 
 			for (const cartItem of cartItems) {
-				// Check if sufficient stock is available
-				if (cartItem.stockQuantity < cartItem.quantity) {
-					throw new Error(
+				const stockUpdate = await client.query(
+					'UPDATE product_variants SET stock_quantity = stock_quantity - $1 WHERE id = $2 AND stock_quantity >= $1 RETURNING id',
+					[cartItem.quantity, cartItem.productVariantId]
+				)
+				if (stockUpdate.rowCount === 0) {
+					throw new BadRequestException(
 						`Insufficient stock for product variant ${cartItem.productVariantId}`
 					)
 				}
@@ -301,13 +313,9 @@ export class OrdersService {
 			return this.getOrderById(orderId, userId)
 		} catch (error) {
 			await client.query('ROLLBACK')
-			if (error instanceof NotFoundException) {
+			if (error instanceof NotFoundException || error instanceof BadRequestException) {
 				throw error
 			}
-			if (error instanceof Error) {
-				throw new Error(error.message)
-			}
-
 			throw error
 		} finally {
 			client.release()
@@ -337,6 +345,20 @@ export class OrdersService {
 
 		// Return updated order
 		return this.getOrderById(orderId, userId)
+	}
+
+	async updateOrderStatusAsAdmin(
+		orderId: string,
+		dto: UpdateOrderStatusDto
+	): Promise<OrderResponseDto> {
+		const result = await this.db.query(
+			'UPDATE orders SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING user_id',
+			[dto.status, orderId]
+		)
+		if (!result.rows[0]) {
+			throw new NotFoundException('Order not found')
+		}
+		return this.getOrderById(orderId, result.rows[0].user_id)
 	}
 
 	async cancelOrder(

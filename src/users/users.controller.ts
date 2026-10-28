@@ -5,7 +5,6 @@ import {
 	Get,
 	HttpStatus,
 	Patch,
-	Post,
 	Query
 } from '@nestjs/common'
 import { Auth } from '../auth/decorators/auth.decorator'
@@ -14,10 +13,21 @@ import { UsersService } from './users.service'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 import { UserResponse } from './dto/user-response.dto'
 import { ResetPasswordDto } from './dto/reset-password.dto'
+import { Roles } from '../roles/decorators/roles.decorator'
+import { Roles as RolesEnum } from '../roles/types/role.type'
+import { PaginationDto } from '../common/dto/pagination.dto'
 
 @Controller('users')
 export class UsersController {
 	constructor(private readonly usersService: UsersService) {}
+
+	@Auth()
+	@Roles(RolesEnum.ADMIN)
+	@Get('admin/all')
+	@ApiOperation({ summary: 'Получить список пользователей для администратора' })
+	getAllForAdmin(@Query() pagination: PaginationDto) {
+		return this.usersService.findAllForAdmin(pagination)
+	}
 
 	@Auth()
 	@Get('me')

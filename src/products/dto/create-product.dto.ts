@@ -5,8 +5,11 @@ import {
 	IsNotEmpty,
 	IsOptional,
 	IsString,
-	IsUUID
+	Matches
 } from 'class-validator'
+
+const postgresUuidPattern =
+	/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export class CreateProductDto {
 	@ApiProperty({
@@ -21,7 +24,7 @@ export class CreateProductDto {
 		example: '123e4567-e89b-12d3-a456-426614174000',
 		description: 'UUID модели'
 	})
-	@IsUUID()
+	@Matches(postgresUuidPattern)
 	@IsNotEmpty()
 	model_id: string
 

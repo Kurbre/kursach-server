@@ -17,6 +17,7 @@ import { REDIS_CLIENT } from '../redis/redis.module'
 import Redis from 'ioredis'
 import { Queue } from 'bullmq'
 import { ResetPasswordDto } from './dto/reset-password.dto'
+import { PaginationDto } from '../common/dto/pagination.dto'
 
 @Injectable()
 export class UsersService {
@@ -49,6 +50,27 @@ export class UsersService {
 		if (!rows[0]) throw new NotFoundException('User not found.')
 
 		return rows[0]
+	}
+
+	async findAllForAdmin(pagination: PaginationDto) {
+		const page = pagination.page ?? 1
+		const limit = pagination.limit ?? 10
+		const offset = (page - 1) * limit
+		const { rows: countRows } = await this.db.query<{ total: string }>(
+			'SELECT COUNT(*) AS total FROM users'
+		)
+		const { rows } = await this.db.query(
+			`
+				SELECT u.id, u.email, u.login, u.name, u.surname, r.name AS role, u.created_at, u.updated_at
+				FROM users u
+				LEFT JOIN roles r ON u.role_id = r.id
+				ORDER BY u.created_at DESC
+				LIMIT $1 OFFSET $2
+			`,
+			[limit, offset]
+		)
+
+		return { data: rows, total: Number(countRows[0]?.total ?? 0) }
 	}
 
 	async findByEmailOrUsername(login: string, isValidation = true) {

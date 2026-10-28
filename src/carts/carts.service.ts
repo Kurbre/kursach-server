@@ -26,10 +26,17 @@ export class CartsService {
         pv.stock_quantity,
         c.id AS "colorId",
         c.name AS "colorName",
-        c.hex AS "colorHex"
+        c.hex AS "colorHex",
+        p.id AS "productId",
+        p.images_path AS "productImages",
+        m.name AS "productName",
+        b.name AS "brandName"
       FROM cart_items ci
       JOIN product_variants pv ON ci.product_variant_id = pv.id
       JOIN colors c ON pv.color_id = c.id
+      JOIN products p ON pv.product_id = p.id
+      JOIN models m ON p.model_id = m.id
+      JOIN brands b ON m.brand_id = b.id
       WHERE ci.user_id = $1
       ORDER BY ci.created_at DESC
     `
@@ -54,7 +61,13 @@ export class CartsService {
 					name: row.colorName,
 					hex: row.colorHex
 				} as ColorResponse
-			} as ProductVariantResponseDto
+			} as ProductVariantResponseDto,
+			product: {
+				id: row.productId,
+				name: row.productName,
+				brandName: row.brandName,
+				images: row.productImages ?? []
+			}
 		}))
 	}
 
@@ -174,10 +187,17 @@ export class CartsService {
         pv.stock_quantity,
         c.id AS "colorId",
         c.name AS "colorName",
-        c.hex AS "colorHex"
+        c.hex AS "colorHex",
+        p.id AS "productId",
+        p.images_path AS "productImages",
+        m.name AS "productName",
+        b.name AS "brandName"
       FROM cart_items ci
       JOIN product_variants pv ON ci.product_variant_id = pv.id
       JOIN colors c ON pv.color_id = c.id
+      JOIN products p ON pv.product_id = p.id
+      JOIN models m ON p.model_id = m.id
+      JOIN brands b ON m.brand_id = b.id
       WHERE ci.id = $1
     `
 
@@ -206,7 +226,13 @@ export class CartsService {
 					name: row.colorName,
 					hex: row.colorHex
 				} as ColorResponse
-			} as ProductVariantResponseDto
+			} as ProductVariantResponseDto,
+			product: {
+				id: row.productId,
+				name: row.productName,
+				brandName: row.brandName,
+				images: row.productImages ?? []
+			}
 		}
 	}
 }

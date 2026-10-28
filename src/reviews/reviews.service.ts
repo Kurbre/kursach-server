@@ -3,6 +3,7 @@ import { DatabaseService } from '../database/database.service'
 import { CreateReviewDto } from './dto/create-review.dto'
 import { UpdateReviewDto } from './dto/update-review.dto'
 import { ReviewResponseDto } from './dto/review-response.dto'
+import { PaginationDto } from '../common/dto/pagination.dto'
 
 @Injectable()
 export class ReviewsService {
@@ -74,6 +75,29 @@ export class ReviewsService {
 					createdAt: row.created_at
 				}) as ReviewResponseDto
 		)
+	}
+
+	async getAllReviewsForAdmin(pagination: PaginationDto) {
+		const page = pagination.page ?? 1
+		const limit = pagination.limit ?? 10
+		const offset = (page - 1) * limit
+		const { rows: countRows } = await this.db.query<{ total: string }>(
+			'SELECT COUNT(*) AS total FROM reviews'
+		)
+		const { rows } = await this.db.query(
+			`
+				SELECT r.id, r.user_id AS "userId", u.login AS "userLogin",
+					r.product_id AS "productId", p.sku AS "productSku",
+					r.rating, r.comment, r.created_at AS "createdAt"
+				FROM reviews r
+				JOIN users u ON r.user_id = u.id
+				JOIN products p ON r.product_id = p.id
+				ORDER BY r.created_at DESC
+				LIMIT $1 OFFSET $2
+			`,
+			[limit, offset]
+		)
+		return { data: rows, total: Number(countRows[0]?.total ?? 0) }
 	}
 
 	async createReview(
@@ -217,6 +241,17 @@ export class ReviewsService {
 			throw new NotFoundException('Review not found or access denied')
 		}
 
+		return { success: true }
+	}
+
+	async deleteReviewAsAdmin(reviewId: string): Promise<{ success: boolean }> {
+		const result = await this.db.query(
+			'DELETE FROM reviews WHERE id = $1 RETURNING id',
+			[reviewId]
+		)
+		if (result.rowCount === 0) {
+			throw new NotFoundException('Review not found')
+		}
 		return { success: true }
 	}
 

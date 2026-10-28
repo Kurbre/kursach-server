@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import { DatabaseService } from '../database/database.service'
 import { CreateFullProductDto } from './dto/create-full-product.dto'
 import { Product, ProductVariant } from './types/products.type'
@@ -127,20 +127,21 @@ export class ProductsService {
 			values.push(filter.colorId)
 		}
 
-		// Filter by minPrice: product has at least one variant with price >= minPrice
+		const priceConditions: string[] = []
 		if (filter.minPrice !== undefined && filter.minPrice !== null) {
-			conditions.push(
-				`EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND pv.price >= $${values.length + 1})`
-			)
+			priceConditions.push(`pv.price >= $${values.length + 1}`)
 			values.push(filter.minPrice)
 		}
 
-		// Filter by maxPrice: product has at least one variant with price <= maxPrice
 		if (filter.maxPrice !== undefined && filter.maxPrice !== null) {
-			conditions.push(
-				`EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND pv.price <= $${values.length + 1})`
-			)
+			priceConditions.push(`pv.price <= $${values.length + 1}`)
 			values.push(filter.maxPrice)
+		}
+
+		if (priceConditions.length > 0) {
+			conditions.push(
+				`EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND ${priceConditions.join(' AND ')})`
+			)
 		}
 
 		const whereClause =
@@ -157,8 +158,16 @@ export class ProductsService {
 				p.updated_at,
 				m.name AS model_name,
 				b.name AS brand_name,
-				COALESCE(ROUND(AVG(r.rating)::numeric, 1), 0) AS rating,
-            	COUNT(r.id)::int AS reviews_count,
+				(
+					SELECT COALESCE(ROUND(AVG(r.rating)::numeric, 1), 0)
+					FROM reviews r
+					WHERE r.product_id = p.id
+				) AS rating,
+				(
+					SELECT COUNT(*)::int
+					FROM reviews r
+					WHERE r.product_id = p.id
+				) AS reviews_count,
 				COALESCE(
 					json_agg(
 						json_build_object(
@@ -170,16 +179,22 @@ export class ProductsService {
 							'stock_quantity', pv.stock_quantity,
 							'color_id', pv.color_id
 						)
+						ORDER BY pv.price ASC
 					) FILTER (WHERE pv.id IS NOT NULL), '[]'
 				) AS variants
 			FROM products p
 			JOIN models m ON p.model_id = m.id
 			JOIN brands b ON m.brand_id = b.id
 			LEFT JOIN product_variants pv ON pv.product_id = p.id
-			LEFT JOIN reviews r ON r.product_id = p.id
 			${whereClause}
 			GROUP BY p.id, m.name, b.name
-			ORDER BY p.created_at DESC
+			ORDER BY ${
+				filter.sortBy === 'price-asc'
+					? 'MIN(pv.price) ASC NULLS LAST, p.created_at DESC'
+					: filter.sortBy === 'price-desc'
+						? 'MIN(pv.price) DESC NULLS LAST, p.created_at DESC'
+						: 'p.created_at DESC'
+			}
 			LIMIT $${values.length + 1} OFFSET $${values.length + 2}
 		`
 
@@ -224,6 +239,16 @@ export class ProductsService {
 				m.name AS model_name,
 				b.id AS brand_id,
 				b.name AS brand_name,
+				(
+					SELECT COALESCE(ROUND(AVG(r.rating)::numeric, 1), 0)
+					FROM reviews r
+					WHERE r.product_id = p.id
+				) AS rating,
+				(
+					SELECT COUNT(*)::int
+					FROM reviews r
+					WHERE r.product_id = p.id
+				) AS reviews_count,
 				to_jsonb(ps.*) - 'id' - 'product_id' AS specifications,
 				COALESCE(
 					json_agg(
@@ -240,6 +265,7 @@ export class ProductsService {
 								'hex', c.hex
 							)
 						)
+						ORDER BY pv.price ASC
 					) FILTER (WHERE pv.id IS NOT NULL), '[]'
 				) AS variants
 			FROM products p
@@ -390,6 +416,28 @@ export class ProductsService {
 						)
 					}
 				}
+			}
+
+			if (dto.delete_variant_ids?.length) {
+				const { rows: referencedVariants } = await client.query<{ id: string }>(
+					`
+						SELECT DISTINCT oi.product_variant_id AS id
+						FROM order_items oi
+						JOIN product_variants pv ON pv.id = oi.product_variant_id
+						WHERE pv.product_id = $1 AND oi.product_variant_id = ANY($2::uuid[])
+					`,
+					[id, dto.delete_variant_ids]
+				)
+				if (referencedVariants.length > 0) {
+					throw new ConflictException(
+						'Cannot delete product variants that are included in existing orders'
+					)
+				}
+
+				await client.query(
+					'DELETE FROM product_variants WHERE product_id = $1 AND id = ANY($2::uuid[])',
+					[id, dto.delete_variant_ids]
+				)
 			}
 
 			await client.query('COMMIT')

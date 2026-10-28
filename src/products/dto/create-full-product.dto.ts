@@ -6,11 +6,14 @@ import {
 	IsNotEmpty,
 	IsOptional,
 	IsString,
-	IsUUID,
+	Matches,
 	ValidateNested
 } from 'class-validator'
 import { CreateProductVariantDto } from './create-product-variant.dto'
 import { CreateProductSpecificationDto } from './create-product-specification.dto'
+
+const postgresUuidPattern =
+	/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export class CreateFullProductDto {
 	@ApiProperty({ example: 'IPHONE-15-PRO-MAX', description: 'Артикул товара' })
@@ -22,7 +25,7 @@ export class CreateFullProductDto {
 		example: '123e4567-e89b-12d3-a456-426614174000',
 		description: 'UUID модели'
 	})
-	@IsUUID()
+	@Matches(postgresUuidPattern)
 	@IsNotEmpty()
 	model_id: string
 

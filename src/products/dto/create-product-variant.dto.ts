@@ -4,17 +4,20 @@ import {
 	IsNotEmpty,
 	IsNumber,
 	IsOptional,
-	IsUUID,
+	Matches,
 	Max,
 	Min
 } from 'class-validator'
+
+const postgresUuidPattern =
+	/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export class CreateProductVariantDto {
 	@ApiProperty({
 		example: '123e4567-e89b-12d3-a456-426614174000',
 		description: 'UUID цвета'
 	})
-	@IsUUID()
+	@Matches(postgresUuidPattern)
 	@IsNotEmpty()
 	color_id: string
 

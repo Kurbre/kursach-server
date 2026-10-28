@@ -17,6 +17,8 @@ import { UpdateOrderStatusDto } from './dto/update-order-status.dto'
 import { OrderResponseDto } from './dto/order-response.dto'
 import { CreateOrderDto } from './dto/create-order.dto'
 import { PaginationDto } from '../common/dto/pagination.dto'
+import { Roles } from '../roles/decorators/roles.decorator'
+import { Roles as RolesEnum } from '../roles/types/role.type'
 
 export class PaginatedOrderResponseDto {
   data: OrderResponseDto[];
@@ -41,6 +43,23 @@ export class OrdersController {
 		@Query() pagination: PaginationDto
 	) {
 		return this.ordersService.getUserOrders(userId, pagination);
+	}
+
+	@Get('admin/all')
+	@Auth()
+	@Roles(RolesEnum.ADMIN)
+	async getAllOrders(@Query() pagination: PaginationDto) {
+		return this.ordersService.getAllOrders(pagination)
+	}
+
+	@Put('admin/:id/status')
+	@Auth()
+	@Roles(RolesEnum.ADMIN)
+	async updateOrderStatusAsAdmin(
+		@Param('id', new ParseUUIDPipe()) id: string,
+		@Body() dto: UpdateOrderStatusDto
+	) {
+		return this.ordersService.updateOrderStatusAsAdmin(id, dto)
 	}
 
 	@Get(':id')

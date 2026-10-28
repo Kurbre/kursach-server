@@ -31,4 +31,12 @@ export class CartItemResponseDto {
     description: 'Информация о варианте продукта'
   })
   productVariant: ProductVariantResponseDto
+
+  @ApiProperty({ description: 'Карточка товара' })
+  product: {
+    id: string
+    name: string
+    brandName: string
+    images: string[]
+  }
 }

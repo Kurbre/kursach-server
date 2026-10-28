@@ -39,6 +39,12 @@ export class ProductResponseDto {
 	@ApiProperty({ example: 'Apple', description: 'Название бренда' })
 	brand_name: string
 
+	@ApiProperty({ example: 4.8, description: 'Средний рейтинг товара' })
+	rating: number
+
+	@ApiProperty({ example: 42, description: 'Количество отзывов' })
+	reviews_count: number
+
 	@ApiProperty({
 		example: '2026-10-10T14:20:00.000Z',
 		description: 'Дата создания'
