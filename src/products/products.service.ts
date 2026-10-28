@@ -86,53 +86,65 @@ export class ProductsService {
 		}
 	}
 
-	async findAll(pagination: PaginationDto, filter: ProductFilterDto): Promise<{ data: any[]; total: number }> {
-		const page = pagination.page ?? 1;
-		const limit = pagination.limit ?? 10;
-		const offset = (page - 1) * limit;
+	async findAll(
+		pagination: PaginationDto,
+		filter: ProductFilterDto
+	): Promise<{ data: any[]; total: number }> {
+		const page = pagination.page ?? 1
+		const limit = pagination.limit ?? 10
+		const offset = (page - 1) * limit
 
 		// Build WHERE conditions and values
-		const conditions = [];
-		const values: any[] = [];
+		const conditions = []
+		const values: any[] = []
 
 		// Search: search in p.sku, m.name, b.name
 		if (filter.search) {
-			const searchTerm = `%${filter.search}%`;
-			conditions.push(`(p.sku ILIKE $${values.length + 1} OR m.name ILIKE $${values.length + 2} OR b.name ILIKE $${values.length + 3})`);
-			values.push(searchTerm, searchTerm, searchTerm);
+			const searchTerm = `%${filter.search}%`
+			conditions.push(
+				`(p.sku ILIKE $${values.length + 1} OR m.name ILIKE $${values.length + 2} OR b.name ILIKE $${values.length + 3})`
+			)
+			values.push(searchTerm, searchTerm, searchTerm)
 		}
 
 		// Filter by brandId
 		if (filter.brandId) {
-			conditions.push(`b.id = $${values.length + 1}`);
-			values.push(filter.brandId);
+			conditions.push(`b.id = $${values.length + 1}`)
+			values.push(filter.brandId)
 		}
 
 		// Filter by modelId
 		if (filter.modelId) {
-			conditions.push(`p.model_id = $${values.length + 1}`);
-			values.push(filter.modelId);
+			conditions.push(`p.model_id = $${values.length + 1}`)
+			values.push(filter.modelId)
 		}
 
 		// Filter by colorId: product has at least one variant with this color
 		if (filter.colorId) {
-			conditions.push(`EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND pv.color_id = $${values.length + 1})`);
-			values.push(filter.colorId);
+			conditions.push(
+				`EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND pv.color_id = $${values.length + 1})`
+			)
+			values.push(filter.colorId)
 		}
 
 		// Filter by minPrice: product has at least one variant with price >= minPrice
 		if (filter.minPrice !== undefined && filter.minPrice !== null) {
-			conditions.push(`EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND pv.price >= $${values.length + 1})`);
-			values.push(filter.minPrice);
+			conditions.push(
+				`EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND pv.price >= $${values.length + 1})`
+			)
+			values.push(filter.minPrice)
 		}
 
 		// Filter by maxPrice: product has at least one variant with price <= maxPrice
 		if (filter.maxPrice !== undefined && filter.maxPrice !== null) {
-			conditions.push(`EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND pv.price <= $${values.length + 1})`);
-			values.push(filter.maxPrice);
+			conditions.push(
+				`EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND pv.price <= $${values.length + 1})`
+			)
+			values.push(filter.maxPrice)
 		}
 
-		const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+		const whereClause =
+			conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
 
 		// Data query: get paginated products with variants
 		const dataQuery = `
@@ -145,6 +157,8 @@ export class ProductsService {
 				p.updated_at,
 				m.name AS model_name,
 				b.name AS brand_name,
+				COALESCE(ROUND(AVG(r.rating)::numeric, 1), 0) AS rating,
+            	COUNT(r.id)::int AS reviews_count,
 				COALESCE(
 					json_agg(
 						json_build_object(
@@ -162,16 +176,17 @@ export class ProductsService {
 			JOIN models m ON p.model_id = m.id
 			JOIN brands b ON m.brand_id = b.id
 			LEFT JOIN product_variants pv ON pv.product_id = p.id
+			LEFT JOIN reviews r ON r.product_id = p.id
 			${whereClause}
 			GROUP BY p.id, m.name, b.name
 			ORDER BY p.created_at DESC
 			LIMIT $${values.length + 1} OFFSET $${values.length + 2}
-		`;
+		`
 
 		// Add limit and offset to values
-		const dataValues = [...values, limit, offset];
+		const dataValues = [...values, limit, offset]
 
-		const { rows: dataRows } = await this.db.query<any>(dataQuery, dataValues);
+		const { rows: dataRows } = await this.db.query<any>(dataQuery, dataValues)
 
 		// Count query: count distinct products matching the filters
 		const countQuery = `
@@ -180,12 +195,15 @@ export class ProductsService {
 			JOIN models m ON p.model_id = m.id
 			JOIN brands b ON m.brand_id = b.id
 			${whereClause}
-		`;
+		`
 
-		const { rows: countRows } = await this.db.query<{ total: number }>(countQuery, values);
-		const total = countRows[0]?.total ?? 0;
+		const { rows: countRows } = await this.db.query<{ total: number }>(
+			countQuery,
+			values
+		)
+		const total = countRows[0]?.total ?? 0
 
-		return { data: dataRows, total };
+		return { data: dataRows, total }
 	}
 
 	async findFullById(idOrSku: string) {
